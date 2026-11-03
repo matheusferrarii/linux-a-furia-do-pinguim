@@ -1,0 +1,10 @@
+{
+    "name": "Florestiferrari.SnowMap.Editor",
+    "references": [
+      "Florestiferrari.SnowMap"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": []
+}

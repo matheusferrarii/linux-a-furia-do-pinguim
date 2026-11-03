@@ -1,0 +1,14 @@
+{
+    "name": "Florestiferrari.SnowMap.Editor.Tests",
+    "references": [
+        "Florestiferrari.SnowMap.Editor",
+        "Florestiferrari.SnowMap"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": []
+}

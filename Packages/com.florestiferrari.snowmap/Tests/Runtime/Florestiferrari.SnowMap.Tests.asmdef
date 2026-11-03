@@ -1,0 +1,11 @@
+{
+    "name": "Florestiferrari.SnowMap.Tests",
+    "references": [
+        "Florestiferrari.SnowMap"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": []
+}
