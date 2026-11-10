@@ -50,10 +50,15 @@ namespace LinuxFuriaPinguim
 
         public bool IsTutorial => tutorial;
 
-        public void Setup(Vector3 a, Vector3 b, Transform visualRoot, GameObject deathFx, GameObject dizzyFx, bool isTutorial)
+        public void Setup(Vector3 a, Vector3 b, Transform visualRoot, GameObject deathFx, GameObject dizzyFx, bool isTutorial, float aggression = 1f)
         {
             pointA = a; pointB = b; visual = visualRoot; deathEffect = deathFx; dizzyEffect = dizzyFx; tutorial = isTutorial;
-            if (tutorial) { speed = 1.6f; chaseSpeed = 2.2f; aggroRadius = 7f; }
+            if (tutorial) { speed = 1.6f; chaseSpeed = 2.2f; aggroRadius = 7f; return; }
+            // Fases mais difíceis: mais rápido, vê de mais longe, avisa por menos tempo e fica menos tonto
+            speed *= aggression; chaseSpeed *= aggression; lungeSpeed *= Mathf.Sqrt(aggression);
+            aggroRadius *= Mathf.Sqrt(aggression); leashRadius *= Mathf.Sqrt(aggression);
+            windupTime /= aggression; dizzyTime /= aggression;
+            windupTime = Mathf.Max(0.35f, windupTime); // sempre dá para reagir
         }
 
         private void Awake()
@@ -101,6 +106,7 @@ namespace LinuxFuriaPinguim
                     Face(to, 360f);
                     if (!tutorial && to.magnitude < lungeRange) {
                         m_State = State.Windup; m_StateUntil = now + windupTime; m_LungeDir = to.normalized;
+                        Feedback.MonsterWindup();
                     } else if (to.magnitude > 1.2f) {
                         Vector3 next = transform.position + to.normalized * chaseSpeed * Time.deltaTime;
                         if (Flat(next - m_Home).magnitude < leashRadius) { Move(to.normalized * chaseSpeed * Time.deltaTime); }

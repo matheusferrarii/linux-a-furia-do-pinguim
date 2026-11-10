@@ -19,13 +19,21 @@ namespace LinuxFuriaPinguim
         private Damageable m_Damageable;
 
         public float BounceMultiplier => bounceMultiplier;
+
+        private Vector3 Center
+        {
+            get { var c = GetComponentInChildren<Collider>(); return c != null ? c.bounds.center : transform.position + Vector3.up; }
+        }
         public bool CanBeStomped => m_Damageable != null && m_Damageable.CurrentHp > 0;
 
         private void Awake()
         {
             m_Damageable = GetComponent<Damageable>();
             if (m_Damageable == null) { m_Damageable = GetComponentInChildren<Damageable>(); }
-            if (m_Damageable != null) { m_Damageable.OnDie += OnDied; }
+            if (m_Damageable != null) {
+                m_Damageable.OnDie += OnDied;
+                m_Damageable.OnTakeDamage += _ => Feedback.EnemyHit(Center);
+            }
         }
 
         public void Stomp()
@@ -36,6 +44,7 @@ namespace LinuxFuriaPinguim
 
         private void OnDied()
         {
+            Feedback.EnemyDie(Center);
             // Para de colidir na hora (não dá mais dano nem atrapalha) e some depois da animação.
             foreach (var c in GetComponentsInChildren<Collider>()) { c.enabled = false; }
             if (hideAfterDeath > 0f && isActiveAndEnabled) { StartCoroutine(HideLater()); }

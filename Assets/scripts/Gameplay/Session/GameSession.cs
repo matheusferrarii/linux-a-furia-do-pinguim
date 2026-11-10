@@ -24,6 +24,16 @@ namespace LinuxFuriaPinguim
         [Header("Missões")]
         [SerializeField] private List<Mission> missions = new List<Mission>();
 
+        [Header("Som e efeitos")]
+        [SerializeField] private FeedbackBank feedbackBank;
+
+        [Header("Próxima fase (vazio = só menu)")]
+        [SerializeField] private string nextScene = "";
+
+        [Header("Bioma inicial")]
+        [SerializeField] private string startArea = "Floresta Congelada";
+        [SerializeField] private bool startBlizzard;
+
         [Header("Clima")]
         [SerializeField] private Material snowMaterial;
 
@@ -48,6 +58,8 @@ namespace LinuxFuriaPinguim
         public PenguinCharacter Player => player;
         public IReadOnlyList<Mission> Missions => missions;
         public GameHUD Hud { get; private set; }
+        public FeedbackBank FeedbackBank => feedbackBank;
+        public string NextScene => nextScene;
 
         /// <summary>Qualquer número do HUD mudou (peixes, vida, vidas...).</summary>
         public event Action Changed;
@@ -55,10 +67,11 @@ namespace LinuxFuriaPinguim
 
 #if UNITY_EDITOR
         /// <summary>Usado pelo gerador da fase (Tools > Furia Pinguim > Fase).</summary>
-        public void EditorSetup(PenguinCharacter p, int lives, float killY, List<Mission> list, Font font, Sprite panel, Sprite button, Material snow)
+        public void EditorSetup(PenguinCharacter p, int lives, float killY, List<Mission> list, Font font, Sprite panel, Sprite button, Material snow, FeedbackBank bank, string next, string areaName = null, bool areaBlizzard = false)
         {
             player = p; startLives = lives; fallKillY = killY; missions = list;
-            titleFont = font; panelSprite = panel; buttonSprite = button; snowMaterial = snow;
+            if (areaName != null) { startArea = areaName; startBlizzard = areaBlizzard; }
+            titleFont = font; panelSprite = panel; buttonSprite = button; snowMaterial = snow; feedbackBank = bank; nextScene = next;
         }
 #endif
 
@@ -77,13 +90,13 @@ namespace LinuxFuriaPinguim
         }
 
         public WeatherController Weather { get; private set; }
-        public string CurrentArea { get; private set; } = "Floresta Congelada";
+        public string CurrentArea { get; private set; }
         private readonly HashSet<string> m_Hints = new HashSet<string>();
 
         /// <summary>Mostra um aviso só na primeira vez (ex.: "Gelo escorregadio!").</summary>
         public void HintOnce(string key, string message)
         {
-            if (m_Hints.Add(key)) { Hud.Toast(message); }
+            if (m_Hints.Add(key)) { Hud.Toast(message); Feedback.Area(); }
         }
 
         /// <summary>Entrou num trecho/bioma da fase (mostra o nome e liga/desliga a nevasca).</summary>
@@ -93,6 +106,7 @@ namespace LinuxFuriaPinguim
             if (string.IsNullOrEmpty(area) || area == CurrentArea) { return; }
             CurrentArea = area;
             Hud.ShowAreaTitle(area);
+            Feedback.Area();
         }
 
         /// <summary>O BSOD foi derrotado.</summary>
@@ -115,6 +129,8 @@ namespace LinuxFuriaPinguim
             }
             // Capangas = inimigos pisáveis, menos o boss.
             TotalEnemies = FindObjectsByType<Stompable>(FindObjectsInactive.Include).Count(s => s.GetComponent<BsodBoss>() == null);
+            CurrentArea = startArea;
+            Weather.SetBlizzard(startBlizzard);
             Hud.ShowAreaTitle(CurrentArea);
 
             if (player != null) {
@@ -128,6 +144,7 @@ namespace LinuxFuriaPinguim
             }
             RaiseChanged();
             MissionsChanged?.Invoke();
+            Feedback.MusicLevel();
         }
 
         private void Update()
@@ -146,10 +163,12 @@ namespace LinuxFuriaPinguim
                 RareFish++;
                 Coins += fish.Value;
                 if (fish.Heal > 0 && player != null) { player.CharacterDamageable.Heal(fish.Heal); }
+                Feedback.RareFish();
                 Hud.Toast(fish.Heal > 0 ? "Peixe dourado! +1 coração" : "Peixe dourado!");
                 Progress(MissionType.CollectRare, RareFish, absolute: true);
             } else {
                 Coins += fish.Value;
+                Feedback.Fish();
             }
             Progress(MissionType.CollectCoins, Coins, absolute: true);
             RaiseChanged();
@@ -165,6 +184,7 @@ namespace LinuxFuriaPinguim
             if (Lives <= 0) {
                 IsGameOver = true;
                 Hud.ShowGameOver();
+                Feedback.GameOver();
             } else {
                 Hud.Toast(Lives == 1 ? "Última vida!" : $"Restam {Lives} vidas");
             }
@@ -192,6 +212,7 @@ namespace LinuxFuriaPinguim
             IsLevelComplete = true;
             if (player != null) { player.InputLocked = true; }
             Hud.ShowLevelComplete();
+            Feedback.Victory();
         }
 
         private void OnEnemyDied(int total)
@@ -248,6 +269,7 @@ namespace LinuxFuriaPinguim
         {
             if (m.done || m.progress < m.target) { return; }
             m.done = true;
+            Feedback.Mission();
             if (m.bonusCoins > 0) { Coins += m.bonusCoins; }
             Hud.Toast(m.bonusCoins > 0 ? $"Missão completa: {m.title}  (+{m.bonusCoins} peixes)" : $"Missão completa: {m.title}");
             RaiseChanged();
@@ -260,6 +282,13 @@ namespace LinuxFuriaPinguim
             Time.timeScale = 1f;
             GameState.IsPaused = false;
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        }
+
+        public void GoToNextScene()
+        {
+            Time.timeScale = 1f;
+            GameState.IsPaused = false;
+            SceneManager.LoadScene(string.IsNullOrEmpty(nextScene) ? mainMenuScene : nextScene);
         }
 
         public void GoToMainMenu()

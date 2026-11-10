@@ -54,6 +54,7 @@ namespace LinuxFuriaPinguim
                     m_IsJumping = true;
                     m_JumpForceMover.StartJump(m_Penguin.JumpForce, m_Penguin.JumpFallOff);
                     AddExternalMover(m_JumpForceMover);
+                    Feedback.Jump(m_Penguin.transform.position);
                 }
 
                 m_GravityMovement = m_Movement.y > c_NoVerticalMovementOffset

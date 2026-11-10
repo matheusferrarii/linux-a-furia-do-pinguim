@@ -75,6 +75,19 @@ namespace LinuxFuriaPinguim
             if (victoryPortal != null) { victoryPortal.SetActive(false); }
         }
 
+        [SerializeField] private float speedMultiplier = 1f;
+        [SerializeField] private int extraShards;
+
+        /// <summary>Dificuldade por fase (fase 2: 4 núcleos, trava mais tarde e por menos tempo, mais rápido).</summary>
+        public void SetDifficulty(int cores, int stagger, float freeze, float speed, int shards)
+        {
+            m_MaxHp = cores; m_CurrentHp = cores;
+            staggerToFreeze = stagger; freezeDuration = freeze; speedMultiplier = speed; extraShards = shards;
+        }
+
+        /// <summary>Fase de raiva 0..2 conforme os núcleos perdidos.</summary>
+        private int Phase => Mathf.Clamp(Mathf.FloorToInt((1f - m_CurrentHp / (float)Mathf.Max(1, m_MaxHp)) * 3f), 0, 2);
+
         /// <summary>Chamado pelo portal do cume quando o pinguim entra na arena.</summary>
         public void Activate()
         {
@@ -105,8 +118,8 @@ namespace LinuxFuriaPinguim
                     continue;
                 }
 
-                int phase = 3 - m_CurrentHp; // 0, 1, 2
-                float chaseTime = Mathf.Lerp(3.0f, 1.6f, phase / 2f);
+                int phase = Phase; // 0, 1, 2
+                float chaseTime = Mathf.Lerp(3.0f, 1.6f, phase / 2f) / speedMultiplier;
                 for (float t = 0; t < chaseTime && PlayerAvailable && !IsFrozen && !IsDead; t += Time.deltaTime) {
                     Chase(phase);
                     yield return null;
@@ -128,7 +141,7 @@ namespace LinuxFuriaPinguim
         {
             Vector3 to = Player.transform.position - transform.position; to.y = 0f;
             Face(to, 120f);
-            float speed = 2.2f + phase * 0.7f;
+            float speed = (2.2f + phase * 0.7f) * speedMultiplier;
             if (to.magnitude > 5.5f) {
                 Vector3 next = transform.position + to.normalized * speed * Time.deltaTime;
                 Vector3 fromCenter = next - arenaCenter; fromCenter.y = 0f;
@@ -148,6 +161,7 @@ namespace LinuxFuriaPinguim
 
         private IEnumerator Roar()
         {
+            Feedback.BossRoar();
             for (float t = 0; t < 1.6f; t += Time.deltaTime) {
                 float a = Mathf.Sin(t / 1.6f * Mathf.PI);
                 SetArms(-110f * a);
@@ -162,7 +176,7 @@ namespace LinuxFuriaPinguim
         /// <summary>Levanta os braços e bate no chão: onda de choque em anel (pule!).</summary>
         private IEnumerator Slam(int phase)
         {
-            float windup = Mathf.Lerp(1.2f, 0.75f, phase / 2f);
+            float windup = Mathf.Lerp(1.2f, 0.75f, phase / 2f) / Mathf.Sqrt(speedMultiplier);
             if (shockwave != null) {
                 shockwave.gameObject.SetActive(true);
                 shockwave.position = Ground(transform.position) + Vector3.up * 0.05f;
@@ -180,6 +194,7 @@ namespace LinuxFuriaPinguim
             float duration = 1.3f;
             bool hit = false;
             Vector3 center = Ground(transform.position);
+            Feedback.BossSlam(center);
             for (float t = 0; t < duration && !IsDead; t += Time.deltaTime) {
                 float r = Mathf.Lerp(1.5f, arenaRadius, t / duration);
                 if (shockwave != null) { shockwave.localScale = Vector3.one * r; }
@@ -205,7 +220,7 @@ namespace LinuxFuriaPinguim
         private IEnumerator Throw(int phase)
         {
             if (projectilePrefab == null) { yield break; }
-            int count = 3 + phase * 2;
+            int count = 3 + phase * 2 + extraShards;
             float spread = 14f;
             for (float t = 0; t < 0.5f && !IsFrozen; t += Time.deltaTime) {
                 SetArms(Mathf.Lerp(0f, -80f, t / 0.5f));
@@ -219,6 +234,7 @@ namespace LinuxFuriaPinguim
                 float angle = (i - (count - 1) * 0.5f) * spread;
                 dir = Quaternion.AngleAxis(angle, Vector3.up) * dir;
                 PoolManager.Instantiate(projectilePrefab, from, Quaternion.LookRotation(dir));
+                Feedback.Throw();
                 SetArms(i % 2 == 0 ? -20f : -80f);
                 yield return new WaitForSeconds(0.12f);
             }
@@ -237,6 +253,7 @@ namespace LinuxFuriaPinguim
                 if (m_HitThisFreeze) { return; }
                 m_HitThisFreeze = true;
                 if (hitEffect != null) { PoolManager.Instantiate(hitEffect, transform.position + Vector3.up * bossHeight * 0.6f, Quaternion.identity); }
+                Feedback.BossCoreHit(transform.position + Vector3.up * bossHeight * 0.6f);
                 base.TakeDamage(new Damage(1, Vector3.zero));
                 if (!IsDead && m_CurrentHp > 0) {
                     GameSession.Instance?.Hud.Toast(m_CurrentHp == 1 ? "Só falta um núcleo!" : "Acertou! O BSOD vai reiniciar...");
@@ -257,6 +274,7 @@ namespace LinuxFuriaPinguim
         {
             IsFrozen = true;
             m_Stagger = 0;
+            Feedback.BossFreeze();
             m_HitThisFreeze = false;
             SetArms(30f);
             if (shockwave != null) { shockwave.gameObject.SetActive(false); }

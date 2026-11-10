@@ -103,6 +103,29 @@ namespace LinuxFuriaPinguim
             if (instant) { m_yaw = yaw; m_yawVelocity = 0f; }
         }
 
+        private static CameraFollow s_instance;
+        private float m_shakeAmp, m_shakeUntil, m_shakeDuration;
+        private Vector3 m_lastShakeOffset;
+
+        /// <summary>Tremida de câmera (impactos, dano, boss). Usa tempo real: funciona durante o hit-stop.</summary>
+        public static void Shake(float amplitude, float duration)
+        {
+            var c = s_instance != null ? s_instance : FindAnyObjectByType<CameraFollow>();
+            if (c == null) { return; }
+            s_instance = c;
+            if (amplitude >= c.CurrentShake()) {
+                c.m_shakeAmp = amplitude; c.m_shakeDuration = duration; c.m_shakeUntil = Time.unscaledTime + duration;
+            }
+        }
+
+        private float CurrentShake()
+        {
+            float left = m_shakeUntil - Time.unscaledTime;
+            return left > 0f && m_shakeDuration > 0f ? m_shakeAmp * (left / m_shakeDuration) : 0f;
+        }
+
+        private void OnEnable() { s_instance = this; }
+
         private Transform m_focus;
         private CombatTargeting m_targeting;
         private float m_combatBlend;
@@ -261,8 +284,15 @@ namespace LinuxFuriaPinguim
                 m_velocity = Vector3.zero;
             } else {
                 transform.position = Vector3.SmoothDamp(
-                    transform.position, desiredPosition, ref m_velocity, positionSmoothTime);
+                    transform.position - m_lastShakeOffset, desiredPosition, ref m_velocity, positionSmoothTime);
             }
+            // tremida aplicada por cima (e removida no quadro seguinte, para não acumular)
+            float shake = CurrentShake();
+            float st = Time.unscaledTime * 40f;
+            m_lastShakeOffset = shake > 0f
+                ? rotation * new Vector3(Mathf.PerlinNoise(st, 0.3f) - 0.5f, Mathf.PerlinNoise(0.7f, st) - 0.5f, 0f) * (shake * 2f)
+                : Vector3.zero;
+            transform.position += m_lastShakeOffset;
             transform.rotation = rotation;
         }
     }

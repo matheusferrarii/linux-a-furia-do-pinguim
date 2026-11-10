@@ -43,6 +43,7 @@ namespace LinuxFuriaPinguim
                 foreach (var r in glowRenderers) { if (r != null) { r.sharedMaterial = activeMaterial; } }
             }
             if (glowLight != null) { glowLight.enabled = true; }
+            Feedback.Checkpoint();
             GameSession.Instance?.ReachCheckpoint(this);
         }
     }

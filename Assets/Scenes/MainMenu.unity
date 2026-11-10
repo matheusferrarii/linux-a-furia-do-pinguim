@@ -13313,7 +13313,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 503e370b6e0b0b541965ddbbcf058294, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LinuxFuriaPinguim.UI.AudioManager
-  defaultBgm: {fileID: 0}
+  defaultBgm: {fileID: 8300000, guid: f9aedc55c345c3d4882a65eb36f4fb45, type: 3}
 --- !u!4 &1593904750
 Transform:
   m_ObjectHideFlags: 0

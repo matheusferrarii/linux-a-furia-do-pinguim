@@ -36,6 +36,7 @@ namespace LinuxFuriaPinguim
             if (boss != null) {
                 FindAnyObjectByType<CameraFollow>()?.SetFocusTarget(boss.transform);
                 boss.Activate();
+                Feedback.MusicBoss();
             }
         }
     }

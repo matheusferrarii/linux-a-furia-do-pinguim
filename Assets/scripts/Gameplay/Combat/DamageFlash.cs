@@ -27,6 +27,7 @@ namespace LinuxFuriaPinguim
         private void OnDamaged(Damage damage)
         {
             if (damage.Amount <= 0 || !isActiveAndEnabled) { return; }
+            Feedback.PlayerHurt();
             if (m_Routine != null) { StopCoroutine(m_Routine); }
             m_Routine = StartCoroutine(Blink());
         }

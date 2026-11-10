@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aefb14fcb6041b344ae33c45b051165a, type: 3}
+  m_Name: FeedbackBank
+  m_EditorClassIdentifier: Assembly-CSharp::LinuxFuriaPinguim.FeedbackBank
+  jump: {fileID: 8300000, guid: 7cd9c875042f9474fad73c8b268068a5, type: 3}
+  land: {fileID: 8300000, guid: 7d32fbba3469b94478b58e57eba1f3ce, type: 3}
+  slide: {fileID: 8300000, guid: af53897cbe3820a41adf70a136af0ec1, type: 3}
+  throwBall: {fileID: 8300000, guid: 47b5691d861bd1a47ae1907fe842d26c, type: 3}
+  stomp: {fileID: 8300000, guid: 7f19b07681d0e7c48998b34915a6f499, type: 3}
+  playerHurt: {fileID: 8300000, guid: 93ab38eccbeb6784185f5f428699719e, type: 3}
+  playerDie: {fileID: 8300000, guid: 5516094095300b840b00f94762ba5c5a, type: 3}
+  enemyHit: {fileID: 8300000, guid: 6e518bd0aafbe8f44a3dbb1e01320e6b, type: 3}
+  enemyDie: {fileID: 8300000, guid: c143c91b40a9e6d4e9a3fb32a1f0da37, type: 3}
+  monsterWindup: {fileID: 8300000, guid: c095cd4fca7666a40aee14a50710a932, type: 3}
+  fish: {fileID: 8300000, guid: 58318d3b11e5d9a4db48dd1dc7618e25, type: 3}
+  rareFish: {fileID: 8300000, guid: e606ca641142f314ebc5ba1b213cd8c5, type: 3}
+  checkpoint: {fileID: 8300000, guid: 2d765faca0ee2304fb90b665e4ab450f, type: 3}
+  mission: {fileID: 8300000, guid: f885b2e5431401948819a7eebbf53a57, type: 3}
+  splash: {fileID: 8300000, guid: 7ff4341166447e24c9ef9976813fea78, type: 3}
+  iceCrack: {fileID: 8300000, guid: 6638d7441751ea2418d75374e8a5c57b, type: 3}
+  area: {fileID: 8300000, guid: 69cb67ea46f80504a8776dea45b2f577, type: 3}
+  dialogBlip: {fileID: 8300000, guid: 5571284b379e818418cc8a0e9bc6beda, type: 3}
+  bossRoar: {fileID: 8300000, guid: 0daae6adcc539b945956dd4ddb0418e0, type: 3}
+  bossSlam: {fileID: 8300000, guid: 98d5f7d20b94eef41b9f59d4db08cb69, type: 3}
+  bossFreeze: {fileID: 8300000, guid: 60b49542164259f48a9090d5bb1da44d, type: 3}
+  bossCoreHit: {fileID: 8300000, guid: a15eabee7f771f040ab640e7d48f6aba, type: 3}
+  victory: {fileID: 8300000, guid: ca0cf79121dd8f148b73ba332218ca98, type: 3}
+  gameOver: {fileID: 8300000, guid: 905bf9127bdb56042b89e8ea4a9d1e6d, type: 3}
+  musicLevel: {fileID: 8300000, guid: f9aedc55c345c3d4882a65eb36f4fb45, type: 3}
+  musicBoss: {fileID: 8300000, guid: a22148f40247cc24484e2b001156a605, type: 3}
+  hitEffect: {fileID: 6376957322104765280, guid: 244af72beb011fb428a63d0d5850c976,
+    type: 3}
+  dustEffect: {fileID: 6376957322104765280, guid: 3b916727a74bd8045afdc0ee0d1db658,
+    type: 3}

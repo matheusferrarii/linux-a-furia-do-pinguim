@@ -23,6 +23,7 @@ namespace LinuxFuriaPinguim
             var p = other.GetComponentInParent<PenguinCharacter>();
             if (p == null || p.IsDead) { return; }
             if (splashEffect != null) { PoolManager.Instantiate(splashEffect, p.transform.position + Vector3.up * 0.5f, Quaternion.identity); }
+            Feedback.Splash(p.transform.position);
             GameSession.Instance?.HintOnce("agua", "Água gelada! Pule as fendas");
             p.CharacterDamageable.Die();
         }

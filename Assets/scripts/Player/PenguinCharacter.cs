@@ -124,7 +124,27 @@ namespace LinuxFuriaPinguim
 
             base.Update();
 
-            if (!m_IsDead) { CheckStomp(); }
+            if (!m_IsDead) { CheckStomp(); CheckLanding(); }
+        }
+
+        private bool m_WasAirborne;
+        private float m_LowestFallSpeed;
+
+        /// <summary>Poeira de neve + som ao aterrissar (mais forte quanto maior a queda).</summary>
+        private void CheckLanding()
+        {
+            float vy = m_CharacterMover.Movement.y;
+            bool grounded = m_CharacterController.isGrounded;
+            if (!grounded) {
+                m_WasAirborne = true;
+                m_LowestFallSpeed = Mathf.Min(m_LowestFallSpeed, vy);
+                return;
+            }
+            if (m_WasAirborne && m_LowestFallSpeed < -6f) {
+                Feedback.Land(transform.position, Mathf.InverseLerp(-6f, -25f, m_LowestFallSpeed));
+            }
+            m_WasAirborne = false;
+            m_LowestFallSpeed = 0f;
         }
 
         /// <summary>
@@ -145,6 +165,7 @@ namespace LinuxFuriaPinguim
                 if (stompable == null || !stompable.CanBeStomped) { continue; }
                 // Precisa estar acima do meio do inimigo (senão é encostar de lado).
                 if (transform.position.y < col.bounds.center.y) { continue; }
+                Feedback.Stomp(col.bounds.center + Vector3.up * col.bounds.extents.y);
                 stompable.Stomp();
                 Bounce(stompable.BounceMultiplier * m_StompBounce);
                 return;
@@ -184,6 +205,7 @@ namespace LinuxFuriaPinguim
         {
             m_IsSliding = true;
             m_SlideEndTime = Time.time + m_SlideDuration;
+            Feedback.Slide(transform.position);
             m_HitThisSlide.Clear();
 
             m_SlideDirection = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
@@ -265,6 +287,7 @@ namespace LinuxFuriaPinguim
 
         public override void Die()
         {
+            if (!m_IsDead) { Feedback.PlayerDie(); }
             StopSlide();
             base.Die();
         }

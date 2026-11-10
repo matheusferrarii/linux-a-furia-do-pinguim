@@ -67,6 +67,7 @@ namespace LinuxFuriaPinguim
             Vector3 flat = Vector3.ProjectOnPlane(dir, Vector3.up);
             if (flat.sqrMagnitude > 0.001f) { transform.rotation = Quaternion.LookRotation(flat.normalized, Vector3.up); }
 
+            Feedback.Throw();
             m_Penguin.CharacterAnimator.ItemAction(CharacterAnimator.SnowBallAnimID, CharacterAnimator.ThrowSnowballAnimID);
             var go = PoolManager.Instantiate(projectilePrefab, origin, Quaternion.LookRotation(dir, Vector3.up));
             if (go == null) { return; }

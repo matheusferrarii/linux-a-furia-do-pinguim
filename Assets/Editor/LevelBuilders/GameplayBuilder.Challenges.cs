@@ -122,13 +122,6 @@ namespace LinuxFuriaPinguim.EditorTools
 
         // ------------------------------------------------------------------ obstáculos e biomas
 
-        private static readonly (string name, bool blizzard, float start)[] Areas = {
-            ("Floresta Congelada", false, 0f),
-            ("Vale Glacial", false, 0.35f),
-            ("Ruínas Soterradas", false, 0.62f),
-            ("Pico da Montanha Ancestral", true, 0.8f),
-        };
-
         private static void PlaceChallenges(List<int> busy, Mats mats, ExtraMats x)
         {
             var root = Group("Obstaculos e perigos");
@@ -153,27 +146,19 @@ namespace LinuxFuriaPinguim.EditorTools
             }
 
             int logs = 0, branches = 0, cracks = 0, ice = 0, icicles = 0;
-            // Floresta: troncos (pular) e galhos baixos (deslizar)
-            foreach (float f in new[] { 0.05f, 0.14f, 0.23f, 0.31f }) { int k = Spot(f); if (k >= 0 && CreateLog(root, k, x)) { logs++; } }
-            foreach (float f in new[] { 0.10f, 0.19f, 0.28f }) { int k = Spot(f, 15f); if (k >= 0 && CreateBranch(root, k, x)) { branches++; } }
-            // Vale Glacial: gelo escorregadio e fendas de água
-            foreach (float f in new[] { 0.37f, 0.44f, 0.51f, 0.58f }) { int k = Spot(f, 20f); if (k >= 0 && CreateIcePatch(root, k, x)) { ice++; } }
-            foreach (float f in new[] { 0.40f, 0.47f, 0.55f, 0.60f }) { int k = Spot(f); if (k >= 0 && CreateCrevasse(root, k, x)) { cracks++; } }
-            // Ruínas Soterradas: estalactites caindo + troncos e galhos mais frequentes
-            foreach (float f in new[] { 0.64f, 0.67f, 0.70f, 0.73f, 0.76f, 0.785f }) { int k = Spot(f, 30f); if (k >= 0 && CreateFallingIce(root, k, x)) { icicles++; } }
-            foreach (float f in new[] { 0.655f, 0.715f }) { int k = Spot(f); if (k >= 0 && CreateLog(root, k, x)) { logs++; } }
-            foreach (float f in new[] { 0.685f, 0.75f }) { int k = Spot(f, 15f); if (k >= 0 && CreateBranch(root, k, x)) { branches++; } }
-            // Pico: tudo junto, sob nevasca
-            foreach (float f in new[] { 0.83f, 0.9f, 0.96f }) { int k = Spot(f); if (k >= 0 && CreateCrevasse(root, k, x)) { cracks++; } }
-            foreach (float f in new[] { 0.86f, 0.93f }) { int k = Spot(f); if (k >= 0 && CreateLog(root, k, x)) { logs++; } }
-            foreach (float f in new[] { 0.88f }) { int k = Spot(f, 15f); if (k >= 0 && CreateBranch(root, k, x)) { branches++; } }
-            foreach (float f in new[] { 0.95f }) { int k = Spot(f, 20f); if (k >= 0 && CreateIcePatch(root, k, x)) { ice++; } }
+            // Listas por fase (a fase 2 tem bem mais obstáculos)
+            foreach (float f in Ph.Ice) { int k = Spot(f, 20f); if (k >= 0 && CreateIcePatch(root, k, x)) { ice++; } }
+            foreach (float f in Ph.Cracks) { int k = Spot(f); if (k >= 0 && CreateCrevasse(root, k, x)) { cracks++; } }
+            foreach (float f in Ph.Icicles) { int k = Spot(f, 30f); if (k >= 0 && CreateFallingIce(root, k, x)) { icicles++; } }
+            foreach (float f in Ph.Logs) { int k = Spot(f); if (k >= 0 && CreateLog(root, k, x)) { logs++; } }
+            foreach (float f in Ph.Branches) { int k = Spot(f, 15f); if (k >= 0 && CreateBranch(root, k, x)) { branches++; } }
 
             // Divisas entre biomas
-            for (int i = 1; i < Areas.Length; i++) {
-                int k = K(Areas[i].start);
-                CreateAreaGate(root, k, Areas[i].name, Areas[i].blizzard, Areas[i - 1].name, Areas[i - 1].blizzard);
-                if (i == 2) { CreateRuinArch(root, k + 4, x); }
+            var areas = Ph.Areas;
+            for (int i = 1; i < areas.Length; i++) {
+                int k = K(areas[i].start);
+                CreateAreaGate(root, k, areas[i].name, areas[i].blizzard, areas[i - 1].name, areas[i - 1].blizzard);
+                if (areas[i].name == "Ruínas Soterradas") { CreateRuinArch(root, k + 4, x); }
             }
             log.AppendLine($"Obstáculos: {logs} troncos, {branches} galhos baixos, {cracks} fendas de água, {ice} placas de gelo, {icicles} estalactites");
         }
@@ -519,6 +504,8 @@ namespace LinuxFuriaPinguim.EditorTools
             boss.Setup(body, armL, armR, parts.ToArray(), x.BossFrozen, faceOk, faceSad, wave, throwPoint,
                 AssetDatabase.LoadAssetAtPath<GameObject>(EnemyProjectile), AssetDatabase.LoadAssetAtPath<GameObject>(EnemyPuff),
                 victoryPortal, arenaCenter, arenaR, H);
+            boss.SetDifficulty(Ph.BossCores, Ph.BossStagger, Ph.BossFreeze, Ph.BossSpeed, Ph.BossExtraShards);
+            if (Ph.Number > 1) { go.name = "BSOD reiniciado (boss)"; }
             go.AddComponent<Stompable>();
             EditorUtility.SetDirty(boss);
             return boss;

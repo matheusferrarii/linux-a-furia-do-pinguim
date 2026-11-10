@@ -138,9 +138,10 @@ namespace LinuxFuriaPinguim.EditorTools
             int K(float f) => Mathf.Clamp(Mathf.RoundToInt(f * s_MaxStep), 2, s_MaxStep - 2);
             int[] checkpoints = { K(0.26f), K(0.52f), K(0.76f) };
             int goalK = s_MaxStep - 4;
+            var o = Ph.NpcOrder;
             var npcSpots = new (string id, int k)[] {
-                ("anciao", Mathf.Min(14, s_MaxStep / 20)), ("debi", checkpoints[0] + 7), ("arch", checkpoints[1] + 7),
-                ("fedora", checkpoints[2] + 7), ("gentoo", goalK - 16),
+                (o[0], Mathf.Min(14, s_MaxStep / 20)), (o[1], checkpoints[0] + 7), (o[2], checkpoints[1] + 7),
+                (o[3], checkpoints[2] + 7), (o[4], goalK - 16),
             };
 
             // --- checkpoints e portal
@@ -149,7 +150,7 @@ namespace LinuxFuriaPinguim.EditorTools
             BuildBossSection(goalK, mats, extra);
 
             // --- NPCs
-            var dialogues = Dialogues();
+            var dialogues = Ph.Dialogues();
             int side = 1;
             foreach (var (id, k) in npcSpots) {
                 var d = dialogues[id];
@@ -158,16 +159,17 @@ namespace LinuxFuriaPinguim.EditorTools
             }
 
             // --- inimigos
-            var shooterK = new[] { 0.16f, 0.31f, 0.40f, 0.47f, 0.62f, 0.70f, 0.83f, 0.91f }.Select(K).ToArray();
-            var monsterK = new[] { 0.09f, 0.20f, 0.28f, 0.36f, 0.44f, 0.50f, 0.57f, 0.66f, 0.73f, 0.80f, 0.87f, 0.94f }.Select(K).ToArray();
+            var shooterK = Ph.Shooters.Select(K).ToArray();
+            var monsterK = Ph.Monsters.Select(K).ToArray();
             int enemies = 0;
             side = 1;
             foreach (int k in shooterK) { if (CreateShooter(enemyRoot, k, side)) { enemies++; } side = -side; }
             for (int i = 0; i < monsterK.Length; i++) {
-                bool tutorial = i < 2; // os dois primeiros ensinam a lutar
+                bool tutorial = i < Ph.TutorialMonsters; // fase 1: os dois primeiros ensinam a lutar
                 if (CreateIceMonster(enemyRoot, monsterK[i], mats, tutorial)) { enemies++; }
             }
-            // Mini tutorial de combate: dicas antes do primeiro monstro e do primeiro capanga
+            // Mini tutorial de combate (só na fase 1): dicas antes do primeiro monstro e do primeiro capanga
+            if (Ph.CombatTutorial) {
             CombatHint(enemyRoot, monsterK[0] - 10, "tut_monstro",
                 "Monstro de Gelo! Clique ou F: bola de neve — a mira marca o inimigo sozinha");
             CombatHint(enemyRoot, monsterK[0] - 3, "tut_pisao",
@@ -176,6 +178,7 @@ namespace LinuxFuriaPinguim.EditorTools
                 "Monstros grandes avisam antes do bote: quando tremerem, saia da frente e revide!");
             CombatHint(enemyRoot, shooterK[0] - 10, "tut_capanga",
                 "Capanga atirador! Ande de lado para desviar e revide com bolas de neve");
+            }
 
             // --- peixes pelo caminho (evita checkpoints, NPCs e o portal)
             var avoid = checkpoints.Concat(npcSpots.Select(n => n.k)).Append(goalK).ToList();
@@ -215,7 +218,7 @@ namespace LinuxFuriaPinguim.EditorTools
             ConfigurePlayer(player);
             int coinTarget = Mathf.Max(10, Mathf.RoundToInt(coins * 0.6f / 10f) * 10);
             int enemyTarget = Mathf.Max(3, Mathf.RoundToInt(enemies * 0.6f));
-            CreateSession(player, Missions(coinTarget, enemyTarget, rare), extra.Snow);
+            CreateSession(player, Ph.Missions(coinTarget, enemyTarget, rare), extra.Snow);
 
             log.AppendLine($"Peixes: {coins}, dourados: {rare}, inimigos: {enemies}, checkpoints: {checkpoints.Length}, NPCs: {npcSpots.Length}");
             log.AppendLine($"Missões: {coinTarget} peixes, {enemyTarget} capangas, {rare} dourados");
@@ -486,13 +489,13 @@ namespace LinuxFuriaPinguim.EditorTools
             if (enemy != null) {
                 var so = new SerializedObject(enemy);
                 so.FindProperty("m_ViewDistance").floatValue = 24f;
-                so.FindProperty("m_AttackDistance").floatValue = 15f;
+                so.FindProperty("m_AttackDistance").floatValue = Ph.ShooterRange;
                 so.ApplyModifiedPropertiesWithoutUndo();
             }
             var spawner = go.GetComponentInChildren<AutomaticProjectileSpawner>();
             if (spawner != null) {
                 var so = new SerializedObject(spawner);
-                so.FindProperty("m_FirePeriod").floatValue = 2.8f;
+                so.FindProperty("m_FirePeriod").floatValue = Ph.ShooterFire;
                 so.ApplyModifiedPropertiesWithoutUndo();
             }
             var dmgHost = go.GetComponentInChildren<Damageable>();
@@ -551,14 +554,14 @@ namespace LinuxFuriaPinguim.EditorTools
                 if (dw > 0.01f) { dizzy.transform.localScale *= h * 0.9f / dw; }
             }
 
-            int hp = tutorial ? 1 : 2;
+            int hp = tutorial ? 1 : Ph.MonsterHp;
             var dmg = go.AddComponent<Damageable>();
             var so = new SerializedObject(dmg);
             so.FindProperty("m_MaxHp").intValue = hp;
             so.FindProperty("m_CurrentHp").intValue = hp;
             so.FindProperty("m_InvincibilityTime").floatValue = 0.25f;
             so.ApplyModifiedPropertiesWithoutUndo();
-            go.AddComponent<IceMonster>().Setup(a, b, visual, AssetDatabase.LoadAssetAtPath<GameObject>(EnemyPuff), dizzy, tutorial);
+            go.AddComponent<IceMonster>().Setup(a, b, visual, AssetDatabase.LoadAssetAtPath<GameObject>(EnemyPuff), dizzy, tutorial, Ph.Aggression);
             go.AddComponent<Stompable>();
             if (tutorial) { go.name = "Monstro de Gelo (tutorial)"; }
             s_Shots.Add(("monstro_" + k, k));
@@ -587,6 +590,12 @@ namespace LinuxFuriaPinguim.EditorTools
             if (player.GetComponent<DamageFlash>() == null) { Undo.AddComponent<DamageFlash>(player.gameObject); }
         }
 
+        private static FeedbackBank LoadOrBuildBank()
+        {
+            var bank = AssetDatabase.LoadAssetAtPath<FeedbackBank>(AudioSynthBuilder.BankPath);
+            return bank != null ? bank : AudioSynthBuilder.BuildAll();
+        }
+
         private static void CreateSession(PenguinCharacter player, List<Mission> missions, Material snow)
         {
             var go = new GameObject("Sessão de Jogo (HUD, vidas, missões)");
@@ -597,7 +606,7 @@ namespace LinuxFuriaPinguim.EditorTools
             session.EditorSetup(player, 3, minY - 30f, missions,
                 AssetDatabase.LoadAssetAtPath<Font>(TitleFont),
                 AssetDatabase.LoadAssetAtPath<Sprite>(PanelSprite),
-                AssetDatabase.LoadAssetAtPath<Sprite>(ButtonSprite), snow);
+                AssetDatabase.LoadAssetAtPath<Sprite>(ButtonSprite), snow, LoadOrBuildBank(), Ph.NextScene, Ph.Areas[0].name, Ph.Areas[0].blizzard);
             EditorUtility.SetDirty(session);
         }
 

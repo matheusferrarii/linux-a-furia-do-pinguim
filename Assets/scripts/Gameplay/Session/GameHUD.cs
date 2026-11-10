@@ -245,8 +245,14 @@ namespace LinuxFuriaPinguim
             m_CompleteSummary = done.Find("Subtitulo").GetComponent<Text>();
             m_CompleteSummary.rectTransform.sizeDelta = new Vector2(760, 220);
             m_CompleteSummary.rectTransform.anchoredPosition = new Vector2(0, 20);
-            Button(done, "Jogar de novo", new Vector2(-170, -170), () => m_Session.Restart());
-            Button(done, "Menu principal", new Vector2(170, -170), () => m_Session.GoToMainMenu());
+            if (!string.IsNullOrEmpty(m_Session.NextScene)) {
+                Button(done, "Próxima fase", new Vector2(0, -170), () => m_Session.GoToNextScene());
+                Button(done, "Jogar de novo", new Vector2(-320, -170), () => m_Session.Restart());
+                Button(done, "Menu principal", new Vector2(320, -170), () => m_Session.GoToMainMenu());
+            } else {
+                Button(done, "Jogar de novo", new Vector2(-170, -170), () => m_Session.Restart());
+                Button(done, "Menu principal", new Vector2(170, -170), () => m_Session.GoToMainMenu());
+            }
             m_CompleteRoot.SetActive(false);
         }
 
@@ -378,7 +384,11 @@ namespace LinuxFuriaPinguim
                     if (AdvancePressed()) { shown = full.Length; break; }
                     acc += Time.unscaledDeltaTime * 55f;
                     int add = Mathf.FloorToInt(acc);
-                    if (add > 0) { acc -= add; shown = Mathf.Min(full.Length, shown + add); m_DialogText.text = full.Substring(0, shown); }
+                    if (add > 0) {
+                        int before = shown;
+                        acc -= add; shown = Mathf.Min(full.Length, shown + add); m_DialogText.text = full.Substring(0, shown);
+                        if (before / 3 != shown / 3) { Feedback.DialogBlip(); }
+                    }
                     yield return null;
                 }
                 m_DialogText.text = full;

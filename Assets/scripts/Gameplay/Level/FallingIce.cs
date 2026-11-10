@@ -68,6 +68,7 @@ namespace LinuxFuriaPinguim
             if (shatterEffect != null) { PoolManager.Instantiate(shatterEffect, m_Ground + Vector3.up * 0.5f, Quaternion.identity); }
 
             var player = GameSession.Instance != null ? GameSession.Instance.Player : null;
+            Feedback.IceCrack(m_Ground, player != null && (player.transform.position - m_Ground).sqrMagnitude < 100f);
             if (player != null && !player.IsDead) {
                 Vector3 d = player.transform.position - m_Ground;
                 if (new Vector2(d.x, d.z).magnitude < hitRadius && d.y < 3f) {

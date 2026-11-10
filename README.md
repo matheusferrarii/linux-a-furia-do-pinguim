@@ -7,7 +7,9 @@ Linux, o pinguim, sobe a Montanha Ancestral para derrotar o BSOD, um golem de ge
 
 1. Clone com Git LFS (`git lfs pull` depois do clone — modelos e texturas estão no LFS).
 2. Abra pelo Unity Hub com a versão **6000.5.6f1**.
-3. Cena inicial: `Assets/Scenes/MainMenu.unity`. Fase: `Assets/Scenes/Mountain.unity`.
+3. Cena inicial: `Assets/Scenes/MainMenu.unity`.
+   - Fase 1: `Assets/Scenes/Mountain.unity` (dia, subida, com tutorial de combate)
+   - Fase 2: `Assets/Scenes/Mountain_Fase2.unity` (noite, descida, mais inimigos e BSOD com 4 núcleos)
 
 ## Controles
 
@@ -35,10 +37,12 @@ Assets/
       Enemies/         Monstro de Gelo, boss BSOD, portal do boss
       Level/           peixes, checkpoints, portal final, gelo, água, estalactites
       NPC/             diálogos e marcador "!"
+      Feedback/        sons, tremida de câmera, hit-stop e partículas de cada evento
     UI/                menu principal, pause, opções, áudio
   Editor/
     LevelBuilders/     geradores da fase (cenário e gameplay)
     UI/                gerador dos menus e ferramentas de sprites
+    Audio/             sintetizador dos sons e músicas
   Gameplay/            materiais e prefabs criados pelos geradores
   Scenes/              MainMenu, Mountain
   Dypsloom/, GeeZyyGames/, nature/, ...   pacotes de terceiros (não editar)
@@ -50,6 +54,12 @@ A fase Mountain é montada a partir das cercas originais do mapa. Se mexer no tr
 
 1. **Cenário → Gerar cenário em volta do trajeto** — barreiras invisíveis, borda de pedras/gelo e floresta.
 2. **Fase → Gerar gameplay** — peixes, inimigos, NPCs, missões, obstáculos, biomas e boss.
+3. **Fase → Gerar Fase 2** — copia a Fase 1, deixa noturna, inverte o percurso e aumenta a dificuldade.
+4. **Áudio → Gerar sons e músicas** — todos os sons e as músicas são sintetizados por código
+   (`Assets/Gameplay/Audio`), sem arquivos de terceiros.
+
+Tudo de uma vez (Unity fechado):
+`Unity -batchmode -projectPath . -executeMethod LinuxFuriaPinguim.EditorTools.GameplayBuilder.BuildAllPhasesBatch -outDir Saida`
 
 Tudo gerado fica em `_CenarioGerado` e `_Gameplay` na cena e pode ser removido pelo mesmo menu.
 Textos de diálogo e missões: fim de `Assets/Editor/LevelBuilders/GameplayBuilder.cs`.
