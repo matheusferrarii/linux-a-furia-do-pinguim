@@ -9,11 +9,24 @@ namespace LinuxFuriaPinguim.UI
         [SerializeField] private GameObject settingsPanel;
         [SerializeField] private string mainMenuSceneName = "MainMenu";
 
+        private UIPanelFader m_pauseFader;
+        private UIPanelFader m_settingsFader;
+
+        private void Awake()
+        {
+            if (pausePanel != null) {
+                m_pauseFader = pausePanel.GetComponent<UIPanelFader>();
+            }
+            if (settingsPanel != null) {
+                m_settingsFader = settingsPanel.GetComponent<UIPanelFader>();
+            }
+        }
+
         private void Update()
         {
             if (Input.GetKeyDown(KeyCode.Escape)) {
                 if (settingsPanel != null && settingsPanel.activeSelf) {
-                    settingsPanel.SetActive(false);
+                    HideSettings();
                     return;
                 }
                 TogglePause();
@@ -38,7 +51,9 @@ namespace LinuxFuriaPinguim.UI
 
         public void OpenSettings()
         {
-            if (settingsPanel != null) {
+            if (m_settingsFader != null) {
+                m_settingsFader.Show();
+            } else if (settingsPanel != null) {
                 settingsPanel.SetActive(true);
             }
         }
@@ -54,16 +69,30 @@ namespace LinuxFuriaPinguim.UI
             Application.Quit();
         }
 
+        private void HideSettings()
+        {
+            if (m_settingsFader != null) {
+                m_settingsFader.Hide();
+            } else if (settingsPanel != null) {
+                settingsPanel.SetActive(false);
+            }
+        }
+
         private void SetPaused(bool paused)
         {
             GameState.IsPaused = paused;
             Time.timeScale = paused ? 0f : 1f;
-            if (pausePanel != null) {
+
+            if (m_pauseFader != null) {
+                if (paused) { m_pauseFader.Show(); } else { m_pauseFader.Hide(); }
+            } else if (pausePanel != null) {
                 pausePanel.SetActive(paused);
             }
-            if (!paused && settingsPanel != null) {
-                settingsPanel.SetActive(false);
+
+            if (!paused) {
+                HideSettings();
             }
+
             Cursor.lockState = paused ? CursorLockMode.None : CursorLockMode.Locked;
             Cursor.visible = paused;
         }

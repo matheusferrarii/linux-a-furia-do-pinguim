@@ -94,7 +94,12 @@ namespace LinuxFuriaPinguim.UI
         public void Close()
         {
             GameSettings.Save();
-            gameObject.SetActive(false);
+            UIPanelFader fader = GetComponent<UIPanelFader>();
+            if (fader != null) {
+                fader.Hide();
+            } else {
+                gameObject.SetActive(false);
+            }
         }
     }
 }

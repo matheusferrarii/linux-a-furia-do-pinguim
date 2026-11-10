@@ -1,0 +1,337 @@
+fileFormatVersion: 2
+guid: 0e28fe97aa9b22a498cac9245c91f6c7
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 1
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 0
+  spriteTessellationDetail: -1
+  textureType: 0
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Btn_Play
+      rect:
+        serializedVersion: 2
+        x: 81.92
+        y: 876.68097
+        width: 655.36
+        height: 203.45401
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 117.964806, y: 24.41448, z: 117.964806, w: 61.036205}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f8ee6e9d37759f840800000000000000
+      internalID: 5258330195020410511
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Btn_Options
+      rect:
+        serializedVersion: 2
+        x: 81.92
+        y: 636.651
+        width: 655.36
+        height: 203.45401
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 117.964806, y: 24.41448, z: 117.964806, w: 61.036205}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: db33c9b280e4421d0800000000000000
+      internalID: -3376488023622667331
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Btn_Extras
+      rect:
+        serializedVersion: 2
+        x: 81.92
+        y: 390.906
+        width: 655.36
+        height: 209.16899
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 117.964806, y: 25.100279, z: 117.964806, w: 62.750698}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 148f1c4fb8398dd70800000000000000
+      internalID: 9068160079026583617
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Btn_Quit
+      rect:
+        serializedVersion: 2
+        x: 81.92
+        y: 150.876
+        width: 655.36
+        height: 203.45401
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 117.964806, y: 24.41448, z: 117.964806, w: 61.036205}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 01bce4bafc2af2040800000000000000
+      internalID: 4625094355148786448
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Panel_Blank_1
+      rect:
+        serializedVersion: 2
+        x: 808.96
+        y: 876.68097
+        width: 634.88
+        height: 203.45401
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 114.278404, y: 24.41448, z: 114.278404, w: 61.036205}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 52774a0d5162dc3d0800000000000000
+      internalID: -3184847486344464603
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Panel_Blank_2
+      rect:
+        serializedVersion: 2
+        x: 808.96
+        y: 636.651
+        width: 634.88
+        height: 203.45401
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 114.278404, y: 24.41448, z: 114.278404, w: 61.036205}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 28b0e3cbd116899c0800000000000000
+      internalID: -3920276695285888126
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Panel_Blank_3
+      rect:
+        serializedVersion: 2
+        x: 808.96
+        y: 390.906
+        width: 634.88
+        height: 209.16899
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 114.278404, y: 25.100279, z: 114.278404, w: 62.750698}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b8023e28fcf7b1c70800000000000000
+      internalID: 8942882014305132683
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Panel_Large_Plain
+      rect:
+        serializedVersion: 2
+        x: 1505.28
+        y: 634.365
+        width: 532.48
+        height: 451.48502
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 95.8464, y: 54.1782, z: 95.8464, w: 135.44551}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d6dea16322a56e9e0800000000000000
+      internalID: -1592486315245769363
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Panel_Large_Icy
+      rect:
+        serializedVersion: 2
+        x: 1505.28
+        y: 142.87497
+        width: 532.48
+        height: 462.915
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 95.8464, y: 55.5498, z: 95.8464, w: 138.87451}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 970412ec1f61d7ea0800000000000000
+      internalID: -5873513111220043655
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Btn_Extras: 9068160079026583617
+      Btn_Options: -3376488023622667331
+      Btn_Play: 5258330195020410511
+      Btn_Quit: 4625094355148786448
+      Panel_Blank_1: -3184847486344464603
+      Panel_Blank_2: -3920276695285888126
+      Panel_Blank_3: 8942882014305132683
+      Panel_Large_Icy: -5873513111220043655
+      Panel_Large_Plain: -1592486315245769363
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
