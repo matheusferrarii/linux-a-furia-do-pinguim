@@ -24,10 +24,10 @@ namespace LinuxFuriaPinguim.EditorTools
         private static readonly Color IceLight = new Color32(214, 241, 255, 255);
         private static readonly Color IceAccent = new Color32(140, 224, 255, 255);
         private static readonly Color IceOutline = new Color32(10, 40, 64, 255);
-        private static readonly Color FrostedNormal = new Color(1f, 1f, 1f, 0.12f);
-        private static readonly Color FrostedHighlighted = new Color32(180, 236, 255, 110);
-        private static readonly Color FrostedPressed = new Color32(90, 180, 220, 200);
-        private static readonly Color FrostedSelected = new Color32(150, 220, 255, 140);
+        private static readonly Color FrostedNormal = new Color(1f, 1f, 1f, 0.22f);
+        private static readonly Color FrostedHighlighted = new Color32(180, 236, 255, 150);
+        private static readonly Color FrostedPressed = new Color32(90, 180, 220, 210);
+        private static readonly Color FrostedSelected = new Color32(150, 220, 255, 170);
 
         // ---------- Wood theme palette (main menu action buttons) ----------
         private static readonly Color WoodNormal = new Color32(140, 94, 48, 255);
@@ -54,6 +54,18 @@ namespace LinuxFuriaPinguim.EditorTools
             }
 
             Debug.Log("MenuBuilder: menus criados com sucesso.");
+        }
+
+        /// <summary>
+        /// Builda os menus e ja entra em Play Mode direto, pra abrir o Editor e ver o
+        /// resultado sem precisar clicar em nada. Rode com o Unity FECHADO (sem -batchmode
+        /// nem -quit, pra a janela do Editor ficar aberta e visivel).
+        /// </summary>
+        [MenuItem("Tools/Furia Pinguim/Build Menus And Play")]
+        public static void BuildMenusAndPlay()
+        {
+            BuildMenus();
+            EditorApplication.isPlaying = true;
         }
 
         // ---------- Main Menu scene ----------
@@ -268,8 +280,16 @@ namespace LinuxFuriaPinguim.EditorTools
                 // visivel por uma camera "normal"). A camera de preview isolada pode nao marcar
                 // o SkinnedMeshRenderer como visivel pra esse calculo, travando o modelo na bind
                 // pose (pose quebrada / T-pose). Forca sempre animar.
+                Animator penguinAnimator = null;
                 foreach (Animator animator in penguin.GetComponentsInChildren<Animator>(true)) {
                     animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+                    penguinAnimator = animator;
+                }
+                if (penguinAnimator != null) {
+                    PenguinPreviewIdlePose idlePose = penguin.AddComponent<PenguinPreviewIdlePose>();
+                    SerializedObject idlePoseSo = new SerializedObject(idlePose);
+                    idlePoseSo.FindProperty("animator").objectReferenceValue = penguinAnimator;
+                    idlePoseSo.ApplyModifiedProperties();
                 }
 
                 IdleFloatAnimation idleFloat = penguin.AddComponent<IdleFloatAnimation>();
@@ -580,38 +600,59 @@ namespace LinuxFuriaPinguim.EditorTools
             titleRect.anchorMax = new Vector2(0.5f, 1f);
             titleRect.pivot = new Vector2(0.5f, 1f);
             titleRect.anchoredPosition = new Vector2(0f, -80f);
-            titleRect.sizeDelta = new Vector2(900f, 100f);
+            titleRect.sizeDelta = new Vector2(1000f, 160f);
+            ApplyDecorativeFont(title, 84);
 
-            GameObject buttonsPanel = CreateVerticalGroup(pausePanelRect, "PauseButtons", 18f, 420f);
+            // 5 botoes de 100 + 4 espacos de 24 = ~596 de altura; desce o grupo pra ficar bem
+            // abaixo do titulo (antes, centralizado, o primeiro botao subia em cima do "PAUSADO").
+            GameObject buttonsPanel = CreateVerticalGroup(pausePanelRect, "PauseButtons", 24f, 420f, controlChildWidth: false, alignRight: false);
             RectTransform buttonsRect = buttonsPanel.GetComponent<RectTransform>();
             buttonsRect.anchorMin = new Vector2(0.5f, 0.5f);
             buttonsRect.anchorMax = new Vector2(0.5f, 0.5f);
             buttonsRect.pivot = new Vector2(0.5f, 0.5f);
-            buttonsRect.anchoredPosition = Vector2.zero;
+            buttonsRect.anchoredPosition = new Vector2(0f, -90f);
 
             GameObject settingsPanel = BuildSettingsPanel(canvasRect, out SettingsPanelController settingsController);
+
+            Text countdown = CreateLabel(canvasRect, "CountdownText", "3", 200);
+            StyleTitle(countdown);
+            ApplyDecorativeFont(countdown, 240);
+            countdown.raycastTarget = false;
+            RectTransform countdownRect = countdown.rectTransform;
+            countdownRect.anchorMin = new Vector2(0.5f, 0.5f);
+            countdownRect.anchorMax = new Vector2(0.5f, 0.5f);
+            countdownRect.pivot = new Vector2(0.5f, 0.5f);
+            countdownRect.anchoredPosition = Vector2.zero;
+            countdownRect.sizeDelta = new Vector2(600f, 400f);
+            countdown.gameObject.SetActive(false);
 
             GameObject controllerGO = new GameObject("PauseMenuController");
             PauseMenuController pauseMenuController = controllerGO.AddComponent<PauseMenuController>();
             SerializedObject so = new SerializedObject(pauseMenuController);
             so.FindProperty("pausePanel").objectReferenceValue = pausePanel;
             so.FindProperty("settingsPanel").objectReferenceValue = settingsPanel;
+            so.FindProperty("countdownText").objectReferenceValue = countdown;
+            so.FindProperty("countdownSeconds").intValue = 3;
             so.FindProperty("mainMenuSceneName").stringValue = "MainMenu";
             so.ApplyModifiedProperties();
 
-            Button resumeButton = CreateFrostedButton(buttonsRect, "ResumeButton", "CONTINUAR");
+            // Reaproveitando os 4 icones de madeira que existem (play/engrenagem/estrela/porta) -
+            // "Restart" nao tem um icone proprio (sem seta circular na arte), usando a estrela
+            // como generico; troque pelo sprite certo se/quando tiver um icone de restart.
+            const float pauseButtonHeight = 100f;
+            Button resumeButton = CreateWoodButton(buttonsRect, "ResumeButton", "CONTINUAR", WoodNormal, "Btn_Play", pauseButtonHeight);
             UnityEventTools.AddVoidPersistentListener(resumeButton.onClick, pauseMenuController.Resume);
 
-            Button restartButton = CreateFrostedButton(buttonsRect, "RestartButton", "RESTART");
+            Button restartButton = CreateWoodButton(buttonsRect, "RestartButton", "RESTART", WoodNormal, "Btn_Extras", pauseButtonHeight);
             UnityEventTools.AddVoidPersistentListener(restartButton.onClick, pauseMenuController.Restart);
 
-            Button settingsButton = CreateFrostedButton(buttonsRect, "SettingsButton", "CONFIGURACOES");
+            Button settingsButton = CreateWoodButton(buttonsRect, "SettingsButton", "OPCOES", WoodNormal, "Btn_Options", pauseButtonHeight);
             UnityEventTools.AddVoidPersistentListener(settingsButton.onClick, pauseMenuController.OpenSettings);
 
-            Button mainMenuButton = CreateFrostedButton(buttonsRect, "MainMenuButton", "MENU PRINCIPAL");
+            Button mainMenuButton = CreateWoodButton(buttonsRect, "MainMenuButton", "MENU", WoodNormal, "Btn_Quit", pauseButtonHeight);
             UnityEventTools.AddVoidPersistentListener(mainMenuButton.onClick, pauseMenuController.GoToMainMenu);
 
-            Button quitButton = CreateFrostedButton(buttonsRect, "QuitButton", "SAIR");
+            Button quitButton = CreateWoodButton(buttonsRect, "QuitButton", "SAIR", WoodNormal, "Btn_Quit", pauseButtonHeight);
             UnityEventTools.AddVoidPersistentListener(quitButton.onClick, pauseMenuController.QuitGame);
 
             Button closeSettingsButton = settingsPanel.transform.Find("Card/CloseButton").GetComponent<Button>();
@@ -641,12 +682,19 @@ namespace LinuxFuriaPinguim.EditorTools
 
         private static void SetupBuildSettings()
         {
-            EditorBuildSettingsScene[] scenes = new[]
-            {
-                new EditorBuildSettingsScene(MainMenuScenePath, true),
-                new EditorBuildSettingsScene(MountainScenePath, true),
-            };
-            EditorBuildSettings.scenes = scenes;
+            // Preserva as outras cenas ja registradas (ex: Mountain_Fase2) - so garante que o
+            // MainMenu seja a cena 0 (primeira do build) e que a Mountain esteja na lista.
+            System.Collections.Generic.List<EditorBuildSettingsScene> scenes =
+                new System.Collections.Generic.List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
+
+            scenes.RemoveAll(s => s.path == MainMenuScenePath);
+            scenes.Insert(0, new EditorBuildSettingsScene(MainMenuScenePath, true));
+
+            if (!scenes.Exists(s => s.path == MountainScenePath)) {
+                scenes.Add(new EditorBuildSettingsScene(MountainScenePath, true));
+            }
+
+            EditorBuildSettings.scenes = scenes.ToArray();
         }
 
         // ---------- Snow ambience ----------
@@ -807,6 +855,24 @@ namespace LinuxFuriaPinguim.EditorTools
             shadow.effectDistance = new Vector2(0f, -3f);
         }
 
+        /// <summary>
+        /// Aplica a fonte decorativa "Santa's Air Mail" (se existir) a um titulo ja estilizado
+        /// com StyleTitle, com overflow liberado (a fonte tem metricas incomuns que cortavam
+        /// o texto com os limites normais) e Normal (sem negrito sintetico, a fonte ja e densa).
+        /// </summary>
+        private static void ApplyDecorativeFont(Text text, int fontSize)
+        {
+            Font decorativeFont = AssetDatabase.LoadAssetAtPath<Font>(TitleFontPath);
+            if (decorativeFont == null) {
+                return;
+            }
+            text.font = decorativeFont;
+            text.fontSize = fontSize;
+            text.fontStyle = FontStyle.Normal;
+            text.horizontalOverflow = HorizontalWrapMode.Overflow;
+            text.verticalOverflow = VerticalWrapMode.Overflow;
+        }
+
         private static void StyleButtonText(Text buttonText, Color textColor)
         {
             buttonText.color = textColor;
@@ -817,7 +883,7 @@ namespace LinuxFuriaPinguim.EditorTools
             outline.effectDistance = new Vector2(1.5f, -1.5f);
         }
 
-        private static GameObject CreateVerticalGroup(Transform parent, string name, float spacing, float width, bool controlChildWidth = true)
+        private static GameObject CreateVerticalGroup(Transform parent, string name, float spacing, float width, bool controlChildWidth = true, bool alignRight = true)
         {
             GameObject go = new GameObject(name, typeof(RectTransform), typeof(VerticalLayoutGroup), typeof(ContentSizeFitter));
             go.transform.SetParent(parent, false);
@@ -826,7 +892,7 @@ namespace LinuxFuriaPinguim.EditorTools
 
             VerticalLayoutGroup layout = go.GetComponent<VerticalLayoutGroup>();
             layout.spacing = spacing;
-            layout.childAlignment = controlChildWidth ? TextAnchor.UpperCenter : TextAnchor.UpperRight;
+            layout.childAlignment = (controlChildWidth || !alignRight) ? TextAnchor.UpperCenter : TextAnchor.UpperRight;
             layout.childControlWidth = controlChildWidth;
             layout.childControlHeight = false;
             layout.childForceExpandWidth = controlChildWidth;
@@ -851,16 +917,16 @@ namespace LinuxFuriaPinguim.EditorTools
         /// Main-menu action button: wood plank styling with a snow cap and a left-side icon slot
         /// (placeholder Image - swap the sprite for the real icon art).
         /// </summary>
-        private static Button CreateWoodButton(Transform parent, string name, string label, Color baseColor, string spriteName)
+        private static Button CreateWoodButton(Transform parent, string name, string label, Color baseColor, string spriteName, float height = 84f)
         {
             Sprite woodSprite = LoadAsSprite(IndividualButtonSpritesDir + "/" + spriteName + ".png");
             if (woodSprite != null) {
-                return CreateArtButton(parent, name, woodSprite, label);
+                return CreateArtButton(parent, name, woodSprite, label, height);
             }
 
             Color highlighted = baseColor == WoodNormal ? WoodHighlighted : FrostedHighlighted;
             Color pressed = baseColor == WoodNormal ? WoodPressed : FrostedPressed;
-            Button button = CreateBaseButton(parent, name, label, 72f, baseColor, highlighted, pressed, highlighted, IceLight);
+            Button button = CreateBaseButton(parent, name, label, height, baseColor, highlighted, pressed, highlighted, IceLight);
             GameObject go = button.gameObject;
 
             // Snow cap placeholder on top of the plank - troque pelos sprites "Btn_Play" /
@@ -905,13 +971,12 @@ namespace LinuxFuriaPinguim.EditorTools
         /// nao precisa de SnowCap/IconSlot separados). Adiciona o rotulo de texto por cima,
         /// deslocado pra direita do icone que ja esta desenhado na arte.
         /// </summary>
-        private static Button CreateArtButton(Transform parent, string name, Sprite sprite, string label)
+        private static Button CreateArtButton(Transform parent, string name, Sprite sprite, string label, float height = 84f)
         {
             GameObject go = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
             go.transform.SetParent(parent, false);
 
             float aspect = sprite.rect.height > 0f ? sprite.rect.width / sprite.rect.height : 3f;
-            float height = 84f;
             RectTransform rect = go.GetComponent<RectTransform>();
             rect.sizeDelta = new Vector2(height * aspect, height);
             LayoutElement layoutElement = go.AddComponent<LayoutElement>();
@@ -1000,9 +1065,19 @@ namespace LinuxFuriaPinguim.EditorTools
 
             Text buttonText = go.GetComponentInChildren<Text>();
             buttonText.text = label;
-            buttonText.fontSize = 28;
             buttonText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             StyleButtonText(buttonText, textColor);
+
+            Font decorativeFont = AssetDatabase.LoadAssetAtPath<Font>(TitleFontPath);
+            if (decorativeFont != null) {
+                buttonText.font = decorativeFont;
+                buttonText.fontStyle = FontStyle.Normal;
+                buttonText.resizeTextForBestFit = true;
+                buttonText.resizeTextMinSize = 12;
+                buttonText.resizeTextMaxSize = 34;
+            } else {
+                buttonText.fontSize = 28;
+            }
 
             return button;
         }
