@@ -11,6 +11,16 @@ namespace LinuxFuriaPinguim.UI
         [SerializeField] private GameObject quitConfirmPanel;
         [SerializeField] private SceneLoader sceneLoader;
 
+        private void Start()
+        {
+            // Vindo do jogo (menu de pausa -> MENU), o cursor chega travado e escondido pela
+            // camera de gameplay, e nada no menu principal ficava clicavel.
+            Time.timeScale = 1f;
+            GameState.IsPaused = false;
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+
         public void OnPlayClicked()
         {
             Time.timeScale = 1f;

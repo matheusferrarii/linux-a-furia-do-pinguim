@@ -14,8 +14,6 @@ namespace LinuxFuriaPinguim.UI
         [SerializeField] private Toggle fullscreenToggle;
         [SerializeField] private Dropdown resolutionDropdown;
 
-        private Resolution[] m_resolutions;
-
         private void OnEnable()
         {
             Refresh();
@@ -38,20 +36,13 @@ namespace LinuxFuriaPinguim.UI
             if (fullscreenToggle != null) { fullscreenToggle.SetIsOnWithoutNotify(GameSettings.GetFullscreen()); }
 
             if (resolutionDropdown != null) {
-                m_resolutions = Screen.resolutions;
                 List<string> options = new List<string>();
-                int currentIndex = GameSettings.GetResolutionIndex();
-                for (int i = 0; i < m_resolutions.Length; i++) {
-                    Resolution resolution = m_resolutions[i];
-                    options.Add(resolution.width + " x " + resolution.height);
-                    if (currentIndex < 0 && resolution.width == Screen.currentResolution.width &&
-                        resolution.height == Screen.currentResolution.height) {
-                        currentIndex = i;
-                    }
+                foreach (Vector2Int size in GameSettings.GetAvailableResolutions()) {
+                    options.Add(size.x + " x " + size.y);
                 }
                 resolutionDropdown.ClearOptions();
                 resolutionDropdown.AddOptions(options);
-                resolutionDropdown.SetValueWithoutNotify(Mathf.Max(currentIndex, 0));
+                resolutionDropdown.SetValueWithoutNotify(GameSettings.GetResolutionIndex());
                 resolutionDropdown.RefreshShownValue();
             }
         }
@@ -59,6 +50,7 @@ namespace LinuxFuriaPinguim.UI
         public void OnMasterVolumeChanged(float value)
         {
             GameSettings.SetMasterVolume(value);
+            AudioManager.PlaySfxPreview();
         }
 
         public void OnMusicVolumeChanged(float value)
@@ -69,6 +61,7 @@ namespace LinuxFuriaPinguim.UI
         public void OnSfxVolumeChanged(float value)
         {
             GameSettings.SetSfxVolume(value);
+            AudioManager.PlaySfxPreview();
         }
 
         public void OnSensitivityChanged(float value)

@@ -1,5 +1,7 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace LinuxFuriaPinguim.UI
 {
@@ -7,10 +9,13 @@ namespace LinuxFuriaPinguim.UI
     {
         [SerializeField] private GameObject pausePanel;
         [SerializeField] private GameObject settingsPanel;
+        [SerializeField] private Text countdownText;
+        [SerializeField] private int countdownSeconds = 3;
         [SerializeField] private string mainMenuSceneName = "MainMenu";
 
         private UIPanelFader m_pauseFader;
         private UIPanelFader m_settingsFader;
+        private bool m_isCountingDown;
 
         private void Awake()
         {
@@ -24,6 +29,10 @@ namespace LinuxFuriaPinguim.UI
 
         private void Update()
         {
+            if (m_isCountingDown) {
+                return;
+            }
+
             if (Input.GetKeyDown(KeyCode.Escape)) {
                 if (settingsPanel != null && settingsPanel.activeSelf) {
                     HideSettings();
@@ -35,12 +44,19 @@ namespace LinuxFuriaPinguim.UI
 
         public void TogglePause()
         {
-            SetPaused(!GameState.IsPaused);
+            if (GameState.IsPaused) {
+                Resume();
+            } else {
+                SetPaused(true);
+            }
         }
 
         public void Resume()
         {
-            SetPaused(false);
+            if (m_isCountingDown) {
+                return;
+            }
+            StartCoroutine(ResumeWithCountdown());
         }
 
         public void Restart()
@@ -67,6 +83,45 @@ namespace LinuxFuriaPinguim.UI
         public void QuitGame()
         {
             Application.Quit();
+        }
+
+        private IEnumerator ResumeWithCountdown()
+        {
+            m_isCountingDown = true;
+
+            // O jogo continua pausado (timeScale 0, camera travada) durante a contagem; so o
+            // menu some. Cursor ja volta travado pra nao dar clique perdido na tela.
+            if (m_pauseFader != null) {
+                m_pauseFader.Hide();
+            } else if (pausePanel != null) {
+                pausePanel.SetActive(false);
+            }
+            HideSettings();
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+
+            if (countdownText != null) {
+                countdownText.gameObject.SetActive(true);
+                RectTransform rect = countdownText.rectTransform;
+
+                for (int n = countdownSeconds; n >= 1; n--) {
+                    countdownText.text = n.ToString();
+
+                    float t = 0f;
+                    while (t < 1f) {
+                        t += Time.unscaledDeltaTime;
+                        float eased = 1f - Mathf.Pow(1f - Mathf.Clamp01(t), 3f);
+                        rect.localScale = Vector3.one * Mathf.Lerp(1.6f, 1f, eased);
+                        yield return null;
+                    }
+                }
+
+                countdownText.gameObject.SetActive(false);
+                rect.localScale = Vector3.one;
+            }
+
+            m_isCountingDown = false;
+            SetPaused(false);
         }
 
         private void HideSettings()
