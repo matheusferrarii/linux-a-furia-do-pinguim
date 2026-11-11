@@ -35,6 +35,21 @@ namespace LinuxFuriaPinguim
         [Tooltip("Acima deste ângulo (andando em direção à tela) a câmera não gira, para não ficar rodando.")]
         [SerializeField] private float ignoreBackwardsAngle = 115f;
 
+        [Header("Ajuste leve com o mouse (por cima da câmera automática)")]
+        [Tooltip("Mexer o mouse vira a câmera só um pouco; parado, ela volta sozinha para a posição automática.")]
+        [SerializeField] private bool mouseNudge = true;
+        [Tooltip("Quanto o mouse pode virar para os lados (graus).")]
+        [SerializeField] private float mouseMaxYaw = 35f;
+        [Tooltip("Quanto o mouse pode inclinar para cima/baixo (graus).")]
+        [SerializeField] private float mouseMaxPitch = 12f;
+        [Tooltip("Segundos sem mexer o mouse até a câmera começar a voltar.")]
+        [SerializeField] private float mouseReturnDelay = 1.0f;
+        [Tooltip("Velocidade da volta para a posição automática.")]
+        [SerializeField] private float mouseReturnSpeed = 2.5f;
+
+        private float m_mouseYaw, m_mousePitch, m_lastMouseTime;
+        private PenguinCharacter m_penguin;
+
         private float targetHeightOffset = 1.2f;
 
         private float distance = 6f;
@@ -126,6 +141,36 @@ namespace LinuxFuriaPinguim
 
         private void OnEnable() { s_instance = this; }
 
+        /// <summary>
+        /// Ajuste leve com o mouse: soma um pequeno desvio (limitado) à câmera automática.
+        /// Sem mexer o mouse por um instante, o desvio volta suavemente a zero.
+        /// Desligado no pause, em diálogo, na sequência de teclas do chefe e com a câmera travada no alvo.
+        /// </summary>
+        private void UpdateMouseNudge()
+        {
+            if (m_penguin == null) { m_penguin = target.GetComponentInParent<PenguinCharacter>(); }
+            bool blocked = !mouseNudge || GameState.IsPaused || Cursor.lockState != CursorLockMode.Locked
+                || (m_penguin != null && (m_penguin.InputLocked || m_penguin.IsDead))
+                || (m_targeting != null && m_targeting.HardLock);
+
+            float dt = Time.unscaledDeltaTime;
+            if (!blocked) {
+                float mx = Input.GetAxis("Mouse X"), my = Input.GetAxis("Mouse Y");
+                if (Mathf.Abs(mx) > 0.01f || Mathf.Abs(my) > 0.01f) {
+                    float k = 1.6f * sensitivityMultiplier;
+                    m_mouseYaw = Mathf.Clamp(m_mouseYaw + mx * k, -mouseMaxYaw, mouseMaxYaw);
+                    m_mousePitch = Mathf.Clamp(m_mousePitch - my * k, -mouseMaxPitch, mouseMaxPitch);
+                    m_lastMouseTime = Time.unscaledTime;
+                }
+            }
+            // volta para a câmera automática
+            if (blocked || Time.unscaledTime - m_lastMouseTime > mouseReturnDelay) {
+                float t = 1f - Mathf.Exp(-mouseReturnSpeed * dt);
+                m_mouseYaw = Mathf.Lerp(m_mouseYaw, 0f, t);
+                m_mousePitch = Mathf.Lerp(m_mousePitch, 0f, t);
+            }
+        }
+
         private Transform m_focus;
         private CombatTargeting m_targeting;
         private float m_combatBlend;
@@ -154,6 +199,7 @@ namespace LinuxFuriaPinguim
 
         private void Update()
         {
+            if (target != null && fixedBehind) { UpdateMouseNudge(); }
             if (target == null || GameState.IsPaused || fixedBehind) { return; }
 
             bool canRotate = !requireRightMouseButton || Input.GetMouseButton(1);
@@ -267,7 +313,7 @@ namespace LinuxFuriaPinguim
                 focusPoint += Vector3.ClampMagnitude(toward * 0.2f, 3f) * m_combatBlend;
             }
 
-            Quaternion rotation = Quaternion.Euler(pitch, m_yaw, 0f);
+            Quaternion rotation = Quaternion.Euler(Mathf.Clamp(pitch + m_mousePitch, -5f, 60f), m_yaw + m_mouseYaw, 0f);
             Vector3 desiredPosition = focusPoint - rotation * Vector3.forward * distance;
 
             Transform self = target;
