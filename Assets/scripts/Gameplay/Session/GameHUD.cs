@@ -84,11 +84,19 @@ namespace LinuxFuriaPinguim
             m_Reticle.anchoredPosition = new Vector2(sp.x, sp.y) / scale;
 
             bool locked = m_Targeting.HardLock;
+            var boss = target.GetComponentInParent<BsodBoss>();
             m_ReticleSpin += Time.unscaledDeltaTime * (locked ? 0f : 40f);
             m_Reticle.localRotation = Quaternion.Euler(0, 0, locked ? 45f : Mathf.Sin(m_ReticleSpin * 0.05f) * 6f);
             float pulse = 1f + Mathf.Sin(Time.unscaledTime * 6f) * 0.06f;
             m_Reticle.localScale = Vector3.one * (locked ? 0.8f : pulse);
             Color c = locked ? new Color32(255, 90, 90, 255) : Gold;
+            if (boss != null && boss.Active && !boss.IsDead) {
+                // Chefe: a mira encolhe até a guarda abrir. Verde = ATAQUE AGORA; cinza = ele defende.
+                bool open = boss.GuardOpen;
+                float toOpen = Mathf.Clamp01((1f - boss.GuardOpenFraction - boss.GuardCycle) / Mathf.Max(0.01f, 1f - boss.GuardOpenFraction));
+                m_Reticle.localScale = Vector3.one * (open ? 1.05f : 1f + toOpen * 1.2f);
+                c = boss.IsFrozen ? new Color32(120, 200, 255, 255) : open ? new Color32(80, 240, 120, 255) : new Color32(170, 170, 185, 255);
+            }
             foreach (var img in m_ReticleParts) { img.color = c; }
 
             // corações do inimigo e dica
@@ -98,7 +106,9 @@ namespace LinuxFuriaPinguim
             var sb = new StringBuilder();
             if (dmg != null && dmg.MaxHp <= 10) { for (int i = 0; i < dmg.MaxHp; i++) { sb.Append(i < dmg.CurrentHp ? "♥" : "♡"); } }
             m_ReticleHp.text = sb.ToString();
-            m_ReticleHint.text = locked ? "câmera travada" : "segure botão direito: travar";
+            m_ReticleHint.text = boss != null && boss.Active && !boss.IsDead
+                ? (boss.IsFrozen ? "TRAVADO!" : boss.GuardOpen ? "ATAQUE AGORA!" : "espere a guarda abrir...")
+                : locked ? "câmera travada" : "segure botão direito: travar";
         }
 
         public void Init(GameSession session, Font titleFont, Sprite panel, Sprite button)
@@ -344,6 +354,101 @@ namespace LinuxFuriaPinguim
         }
 
         public void HideBossBar() { m_BossRoot.SetActive(false); }
+
+        // ------------------------------------------------------------------ sequência de teclas (chefe travado)
+
+        private GameObject m_QteRoot;
+        private readonly List<Text> m_QteKeys = new List<Text>();
+        private readonly List<Image> m_QteBoxes = new List<Image>();
+        private Image m_QteTimer;
+        private Text m_QteTitle;
+
+        /// <summary>Mostra a sequência (ex.: W D W W A). Acertar tudo antes do tempo = true; errar uma tecla ou acabar o tempo = false.</summary>
+        public void StartQte(char[] keys, float seconds, Action<bool> done)
+        {
+            BuildQte(keys.Length);
+            StartCoroutine(QteRoutine(keys, seconds, done));
+        }
+
+        private void BuildQte(int count)
+        {
+            if (m_QteRoot != null) { Destroy(m_QteRoot); }
+            m_QteKeys.Clear(); m_QteBoxes.Clear();
+            float width = Mathf.Max(560f, count * 120f + 100f);
+            var panel = Panel(m_Canvas.transform, "Sequencia", new Vector2(0.5f, 0.5f), new Vector2(0, -60), new Vector2(width, 240));
+            m_QteRoot = panel.gameObject;
+            m_QteTitle = Bold(Label(panel, "Titulo", new Vector2(0, -14), new Vector2(width, 54), 34, Gold, m_BodyFont, TextAnchor.MiddleCenter));
+            m_QteTitle.text = "TRAVOU! Digite a sequência:";
+            float start = -(count - 1) * 60f;
+            for (int i = 0; i < count; i++) {
+                var box = new GameObject("Tecla", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
+                box.transform.SetParent(panel, false);
+                Center(box.rectTransform, new Vector2(start + i * 120f, -5f));
+                box.rectTransform.sizeDelta = new Vector2(96, 96);
+                box.color = new Color32(24, 64, 96, 255);
+                var o = box.gameObject.AddComponent<Outline>(); o.effectColor = IceAccent; o.effectDistance = new Vector2(3, -3);
+                var t = Bold(Label(box.transform, "Letra", Vector2.zero, new Vector2(96, 96), 58, Ice, m_BodyFont, TextAnchor.MiddleCenter));
+                Stretch(t.rectTransform);
+                m_QteBoxes.Add(box); m_QteKeys.Add(t);
+            }
+            var barBack = new GameObject("Tempo", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
+            barBack.transform.SetParent(panel, false);
+            barBack.rectTransform.anchorMin = new Vector2(0, 0); barBack.rectTransform.anchorMax = new Vector2(1, 0);
+            barBack.rectTransform.pivot = new Vector2(0.5f, 0f);
+            barBack.rectTransform.offsetMin = new Vector2(30, 22); barBack.rectTransform.offsetMax = new Vector2(-30, 40);
+            barBack.color = new Color(0, 0, 0, 0.6f);
+            m_QteTimer = new GameObject("Fill", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
+            m_QteTimer.transform.SetParent(barBack.transform, false);
+            Stretch(m_QteTimer.rectTransform, 2f);
+            m_QteTimer.color = Gold;
+        }
+
+        private IEnumerator QteRoutine(char[] keys, float seconds, Action<bool> done)
+        {
+            for (int i = 0; i < keys.Length; i++) { m_QteKeys[i].text = keys[i].ToString(); }
+            int index = 0;
+            float end = Time.unscaledTime + seconds;
+            yield return null;
+            bool ok = false;
+            while (true) {
+                float left = end - Time.unscaledTime;
+                m_QteTimer.rectTransform.anchorMax = new Vector2(Mathf.Clamp01(left / seconds), 1f);
+                m_QteTimer.color = left < seconds * 0.3f ? Heart : Gold;
+                for (int i = 0; i < m_QteBoxes.Count; i++) {
+                    m_QteBoxes[i].color = i < index ? (Color)new Color32(40, 140, 80, 255) : i == index ? (Color)new Color32(60, 110, 170, 255) : (Color)new Color32(24, 64, 96, 255);
+                    m_QteBoxes[i].rectTransform.localScale = Vector3.one * (i == index ? 1.12f + Mathf.Sin(Time.unscaledTime * 12f) * 0.04f : 1f);
+                }
+                if (left <= 0f) { m_QteTitle.text = "Tempo esgotado!"; break; }
+                char pressed = ReadQteKey();
+                if (pressed != '\0') {
+                    if (pressed == keys[index]) {
+                        Feedback.QteKey(true);
+                        index++;
+                        if (index >= keys.Length) { ok = true; m_QteTitle.text = "GOLPE DECISIVO!"; break; }
+                    } else {
+                        Feedback.QteKey(false);
+                        m_QteBoxes[index].color = new Color32(170, 40, 50, 255);
+                        m_QteTitle.text = "Errou!";
+                        break;
+                    }
+                }
+                yield return null;
+            }
+            for (int i = 0; i < m_QteBoxes.Count; i++) { m_QteBoxes[i].rectTransform.localScale = Vector3.one; }
+            if (ok) { foreach (var b in m_QteBoxes) { b.color = new Color32(40, 140, 80, 255); } }
+            yield return new WaitForSecondsRealtime(0.45f);
+            if (m_QteRoot != null) { Destroy(m_QteRoot); }
+            done?.Invoke(ok);
+        }
+
+        private static char ReadQteKey()
+        {
+            if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow)) { return 'W'; }
+            if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow)) { return 'A'; }
+            if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow)) { return 'S'; }
+            if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow)) { return 'D'; }
+            return '\0';
+        }
 
         // ------------------------------------------------------------------ prompt
 

@@ -9,7 +9,15 @@ Linux, o pinguim, sobe a Montanha Ancestral para derrotar o BSOD, um golem de ge
 2. Abra pelo Unity Hub com a versão **6000.5.6f1**.
 3. Cena inicial: `Assets/Scenes/MainMenu.unity`.
    - Fase 1: `Assets/Scenes/Mountain.unity` (dia, subida, com tutorial de combate)
-   - Fase 2: `Assets/Scenes/Mountain_Fase2.unity` (noite, descida, mais inimigos e BSOD com 4 núcleos)
+   - Fase 2: `Assets/Scenes/Fase2_ValeGlacial.unity` (mapa novo, chefe KERNEL PANIC: investidas)
+   - Fase 3: `Assets/Scenes/Fase3_RuinasSoterradas.unity` (corredores estreitos, chefe SEGFAULT: invoca monstros e chuva de gelo)
+   - Fase 4: `Assets/Scenes/Fase4_Pico.unity` (subida sob nevasca, chefe BSOD FINAL: todos os ataques)
+
+## Chefes
+
+- A **guarda** do chefe só abre por instantes (a mira fica **verde**): golpe fora do tempo = "DEFENDEU!".
+- Golpes no tempo certo enchem a barra azul. Cheia, o chefe **trava** e aparece uma **sequência de teclas**
+  (ex.: W D W W A). Acertou tudo a tempo = golpe decisivo (um núcleo a menos). Errou = ele contra-ataca.
 
 ## Controles
 
@@ -54,7 +62,8 @@ A fase Mountain é montada a partir das cercas originais do mapa. Se mexer no tr
 
 1. **Cenário → Gerar cenário em volta do trajeto** — barreiras invisíveis, borda de pedras/gelo e floresta.
 2. **Fase → Gerar gameplay** — peixes, inimigos, NPCs, missões, obstáculos, biomas e boss.
-3. **Fase → Gerar Fase 2** — copia a Fase 1, deixa noturna, inverte o percurso e aumenta a dificuldade.
+3. **Fase → Gerar Fases 2, 3 e 4 (mapas novos)** — cria cada mapa do zero (trilha, terreno, paredes),
+   gera cenário e gameplay e roda um **teste de percurso** que confirma que dá para ir do início ao chefe.
 4. **Áudio → Gerar sons e músicas** — todos os sons e as músicas são sintetizados por código
    (`Assets/Gameplay/Audio`), sem arquivos de terceiros.
 

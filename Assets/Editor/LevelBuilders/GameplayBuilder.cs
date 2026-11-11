@@ -222,6 +222,8 @@ namespace LinuxFuriaPinguim.EditorTools
 
             log.AppendLine($"Peixes: {coins}, dourados: {rare}, inimigos: {enemies}, checkpoints: {checkpoints.Length}, NPCs: {npcSpots.Length}");
             log.AppendLine($"Missões: {coinTarget} peixes, {enemyTarget} capangas, {rare} dourados");
+            Physics.SyncTransforms();
+            WalkTest(player);
             return true;
         }
 

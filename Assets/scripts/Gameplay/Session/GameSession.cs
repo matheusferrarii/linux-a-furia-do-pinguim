@@ -128,7 +128,7 @@ namespace LinuxFuriaPinguim
                 if (fish.IsRare) { TotalRare++; } else { TotalCoins += fish.Value; }
             }
             // Capangas = inimigos pisáveis, menos o boss.
-            TotalEnemies = FindObjectsByType<Stompable>(FindObjectsInactive.Include).Count(s => s.GetComponent<BsodBoss>() == null);
+            TotalEnemies = FindObjectsByType<Stompable>(FindObjectsInactive.Exclude).Count(s => s.GetComponent<BsodBoss>() == null);
             CurrentArea = startArea;
             Weather.SetBlizzard(startBlizzard);
             Hud.ShowAreaTitle(CurrentArea);

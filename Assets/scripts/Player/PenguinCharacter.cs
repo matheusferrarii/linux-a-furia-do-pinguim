@@ -255,34 +255,74 @@ namespace LinuxFuriaPinguim
             }
         }
 
+        // ------------------------------------------------------------------ pose de barriga
+
+        private bool m_PoseApplied;
+        private Vector3 m_PoseBasePos, m_PoseWrittenPos;
+        private Quaternion m_PoseBaseRot, m_PoseWrittenRot;
+        private float m_ModelHeight = -1f;
+        private float m_NextSpray;
+
         /// <summary>
-        /// Pose de barriga: depois do Animator, gira o osso do quadril para frente em torno dos pés.
-        /// Feito no osso (e não no objeto raiz) para não atrapalhar a detecção de chão do Dypsloom.
-        /// Placeholder até existir uma animação própria de deslize.
+        /// Pose de barriga: depois do Animator, deita o MODELO INTEIRO (o esqueleto) de barriga no chão,
+        /// girando em torno da altura da barriga, com um leve balanço. O objeto raiz não gira, então a
+        /// detecção de chão e o colisor continuam certos. Solta neve enquanto desliza.
         /// </summary>
         private void LateUpdate()
         {
             float target = m_IsSliding && !m_IsDead ? m_SlideTiltAngle : 0f;
-            m_CurrentSlideTilt = Mathf.MoveTowards(m_CurrentSlideTilt, target, 600f * Time.deltaTime);
+            m_CurrentSlideTilt = Mathf.MoveTowards(m_CurrentSlideTilt, target, 700f * Time.deltaTime);
+
+            if (m_SlideVisualBone == null) { m_SlideVisualBone = FindVisualRoot(); }
+            var v = m_SlideVisualBone;
+            if (v == null) { return; }
+
+            // Se o Animator não mexeu neste quadro, desfaz o que aplicamos no quadro anterior (não acumula).
+            if (m_PoseApplied && v.localRotation == m_PoseWrittenRot && v.localPosition == m_PoseWrittenPos) {
+                v.localRotation = m_PoseBaseRot;
+                v.localPosition = m_PoseBasePos;
+            }
+            m_PoseApplied = false;
             if (m_CurrentSlideTilt < 0.01f) { return; }
 
-            if (m_SlideVisualBone == null) { m_SlideVisualBone = FindSlideBone(); }
-            if (m_SlideVisualBone == null) { return; }
+            m_PoseBaseRot = v.localRotation;
+            m_PoseBasePos = v.localPosition;
+            if (m_ModelHeight < 0f) { m_ModelHeight = MeasureModelHeight(); }
 
-            Vector3 pivot = transform.position + Vector3.up * 0.15f;
-            m_SlideVisualBone.RotateAround(pivot, transform.right, m_CurrentSlideTilt);
+            float wobble = m_IsSliding ? Mathf.Sin(Time.time * 18f) * 3f : 0f;
+            float k = m_CurrentSlideTilt / Mathf.Max(1f, m_SlideTiltAngle);
+            Vector3 pivot = transform.position + Vector3.up * (m_ModelHeight * 0.32f);
+            v.RotateAround(pivot, transform.right, m_CurrentSlideTilt);
+            v.RotateAround(pivot, transform.forward, wobble * k);
+            // abaixa um pouco para a barriga encostar na neve
+            v.position += Vector3.down * (m_ModelHeight * 0.12f * k);
+
+            m_PoseWrittenRot = v.localRotation;
+            m_PoseWrittenPos = v.localPosition;
+            m_PoseApplied = true;
+
+            if (m_IsSliding && Time.time >= m_NextSpray) {
+                m_NextSpray = Time.time + 0.12f;
+                Feedback.SlideSpray(transform.position + m_SlideDirection * 0.6f);
+            }
         }
 
-        private Transform FindSlideBone()
+        /// <summary>O filho direto do pinguim que contém o esqueleto (é ele que deitamos).</summary>
+        private Transform FindVisualRoot()
         {
-            if (m_Animator != null && m_Animator.isHuman) {
-                var hips = m_Animator.GetBoneTransform(HumanBodyBones.Hips);
-                if (hips != null) { return hips; }
-            }
-            foreach (var t in GetComponentsInChildren<Transform>(true)) {
-                if (t.name.Equals("hips", System.StringComparison.OrdinalIgnoreCase)) { return t; }
-            }
-            return null;
+            var smr = GetComponentInChildren<SkinnedMeshRenderer>(true);
+            Transform t = smr != null && smr.rootBone != null ? smr.rootBone : (smr != null ? smr.transform : null);
+            if (t == null) { return null; }
+            while (t.parent != null && t.parent != transform) { t = t.parent; }
+            return t.parent == transform ? t : null;
+        }
+
+        private float MeasureModelHeight()
+        {
+            var rs = GetComponentsInChildren<SkinnedMeshRenderer>(true);
+            if (rs.Length == 0) { return 1.5f; }
+            var b = rs[0].bounds; foreach (var r in rs) { b.Encapsulate(r.bounds); }
+            return Mathf.Clamp(b.size.y, 0.5f, 5f);
         }
 
         public override void Die()

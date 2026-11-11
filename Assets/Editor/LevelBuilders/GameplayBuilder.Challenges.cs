@@ -138,6 +138,8 @@ namespace LinuxFuriaPinguim.EditorTools
                     var (l, r) = Cross(k);
                     float w = (l + r) * 0.5f;
                     if (WallDist(k) < 2.5f || w > maxHalfWidth) { continue; }
+                    // não coloca obstáculo em rampa (galho/tronco em subida podem prender o pinguim)
+                    if (Mathf.Abs(Point(k - 5).y - Point(k + 5).y) > 2.2f) { continue; }
                     float score = w + Mathf.Abs(k - target) * 0.05f;
                     if (score < bestW) { bestW = score; best = k; }
                 }
@@ -404,7 +406,7 @@ namespace LinuxFuriaPinguim.EditorTools
             var boss = CreateBoss(arena, center + Vector3.right * 6f, Quaternion.LookRotation(Vector3.left), center, R, mats, x, victory.go);
 
             // portal no cume que leva até a arena
-            var portal = CreatePortalVisual(s_Root, summit, Quaternion.LookRotation(Dir(goalK)), mats, "Portal do cume (leva ao BSOD)");
+            var portal = CreatePortalVisual(s_Root, summit, Quaternion.LookRotation(Dir(goalK)), mats, "Portal do cume (leva ao chefe)");
             portal.go.AddComponent<BossPortal>().Setup(spawn, boss, portal.spinner);
             s_Shots.Add(("portal_cume", goalK));
             s_ExtraShots.Add(("arena_bsod", spawn.position, 90f));
@@ -413,8 +415,10 @@ namespace LinuxFuriaPinguim.EditorTools
 
         private static BsodBoss CreateBoss(Transform parent, Vector3 pos, Quaternion rot, Vector3 arenaCenter, float arenaR, Mats mats, ExtraMats x, GameObject victoryPortal)
         {
-            float H = P * 3.2f;
-            var go = new GameObject("BSOD (boss)");
+            float H = P * 3.2f * Ph.BossScale;
+            var go = new GameObject(Ph.BossName + " (chefe)");
+            var bodyMat = BossMaterial("Chefe_" + Ph.BossName.Replace(" ", ""), Ph.BossColor, Ph.BossColor * 0.08f);
+            var guardMat = BossMaterial("ChefeGuardaAberta", Ph.GuardColor, Ph.GuardColor * 0.9f);
             go.transform.SetParent(parent, false);
             go.transform.SetPositionAndRotation(pos, rot);
             var rb = go.AddComponent<Rigidbody>(); rb.isKinematic = true; rb.useGravity = false;
@@ -438,10 +442,10 @@ namespace LinuxFuriaPinguim.EditorTools
                 }
                 return holder.gameObject;
             }
-            Part(WinterRockSmall, new Vector3(-H * 0.18f, 0, 0), H * 0.28f, x.BossBody);   // pernas
-            Part(WinterRockSmall, new Vector3(H * 0.18f, 0, 0), H * 0.28f, x.BossBody);
-            Part(WinterRock, new Vector3(0, H * 0.2f, 0), H * 0.55f, x.BossBody);            // tronco
-            Part(WinterRock, new Vector3(0, H * 0.68f, 0), H * 0.3f, x.BossBody);            // cabeça
+            Part(WinterRockSmall, new Vector3(-H * 0.18f, 0, 0), H * 0.28f, bodyMat);   // pernas
+            Part(WinterRockSmall, new Vector3(H * 0.18f, 0, 0), H * 0.28f, bodyMat);
+            Part(WinterRock, new Vector3(0, H * 0.2f, 0), H * 0.55f, bodyMat);            // tronco
+            Part(WinterRock, new Vector3(0, H * 0.68f, 0), H * 0.3f, bodyMat);            // cabeça
             var spikeL = Part(CrystalModel, new Vector3(-H * 0.2f, H * 0.62f, -H * 0.1f), H * 0.35f, mats.Monster);
             spikeL.transform.localRotation = Quaternion.Euler(-20f, 0, 25f);
             var spikeR = Part(CrystalModel, new Vector3(H * 0.2f, H * 0.62f, -H * 0.1f), H * 0.35f, mats.Monster);
@@ -479,11 +483,11 @@ namespace LinuxFuriaPinguim.EditorTools
                 f.GetComponent<MeshRenderer>().sharedMaterial = font.material;
                 return f;
             }
-            var faceOk = Face("Olhos", "■   ■", H * 0.012f, Vector3.zero);
+            var faceOk = Face("Olhos", Ph.FaceOk, H * 0.012f, Vector3.zero);
             var faceSad = new GameObject("Tela azul");
             faceSad.transform.SetParent(screen.transform, false);
-            Face(":(", ":(", H * 0.02f, new Vector3(0, 0.12f, 0)).transform.SetParent(faceSad.transform, true);
-            Face("Erro", "Seu reino encontrou um problema", H * 0.0035f, new Vector3(0, -0.28f, 0)).transform.SetParent(faceSad.transform, true);
+            Face(":(", Ph.FaceSad, H * 0.02f, new Vector3(0, 0.12f, 0)).transform.SetParent(faceSad.transform, true);
+            Face("Erro", Ph.FaceSadText, H * 0.0035f, new Vector3(0, -0.28f, 0)).transform.SetParent(faceSad.transform, true);
             // o quad olha para +Z do boss? Quad padrão é visível de -Z; gira para ficar de frente
             screen.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
 
@@ -505,10 +509,76 @@ namespace LinuxFuriaPinguim.EditorTools
                 AssetDatabase.LoadAssetAtPath<GameObject>(EnemyProjectile), AssetDatabase.LoadAssetAtPath<GameObject>(EnemyPuff),
                 victoryPortal, arenaCenter, arenaR, H);
             boss.SetDifficulty(Ph.BossCores, Ph.BossStagger, Ph.BossFreeze, Ph.BossSpeed, Ph.BossExtraShards);
-            if (Ph.Number > 1) { go.name = "BSOD reiniciado (boss)"; }
+            boss.SetIdentity(Ph.BossName, guardMat, Ph.QteLength, Ph.QteTime, Ph.GuardPeriod, Ph.GuardWindow);
+
+            // moldes (desativados) usados pelos ataques: Monstro de Gelo invocado e estalactite da chuva de gelo
+            GameObject minion = null;
+            if (Ph.Summon && CreateIceMonster(parent, Mathf.Max(10, s_MaxStep - 20), mats, false)) {
+                minion = parent.GetChild(parent.childCount - 1).gameObject;
+                minion.name = "Molde: monstro invocado";
+                minion.transform.position = arenaCenter;
+                var mon = minion.GetComponent<IceMonster>();
+                if (mon != null) { mon.SetPatrol(arenaCenter + Vector3.left * 5f, arenaCenter + Vector3.right * 5f, Ph.Aggression); }
+                minion.SetActive(false);
+            }
+            GameObject icicle = null;
+            if (Ph.IceRain) {
+                icicle = new GameObject("Molde: estalactite");
+                icicle.transform.SetParent(parent, false);
+                var ice = Model(CrystalModel, icicle.transform, P * 1.2f, out _);
+                if (ice != null) { ice.transform.localRotation = Quaternion.Euler(180f, 0, 0); ice.transform.localPosition += Vector3.up * P * 1.2f; }
+                icicle.SetActive(false);
+            }
+            boss.SetAttacks(Ph.Slam, Ph.Throw, Ph.Charge, Ph.IceRain, Ph.Summon, minion, icicle, x.Shadow);
             go.AddComponent<Stompable>();
             EditorUtility.SetDirty(boss);
             return boss;
+        }
+
+        /// <summary>
+        /// Teste de percurso: uma cápsula do tamanho do pinguim anda pela linha central do início ao portal.
+        /// Bloqueios que não são obstáculos de propósito (tronco, galho, inimigo, NPC) = bug de fase.
+        /// </summary>
+        internal static int WalkTest(PenguinCharacter player)
+        {
+            var cc = player.GetComponent<CharacterController>();
+            float radius = cc != null ? cc.radius * player.transform.lossyScale.x * 0.9f : 0.5f;
+            float height = cc != null ? cc.height * player.transform.lossyScale.y : P;
+            int blocks = 0;
+            for (int k = 6; k < s_MaxStep - 6; k += 3) {
+                Vector3 a = Point(k), b = Point(k + 3);
+                Vector3 dir = b - a;
+                float dist = dir.magnitude;
+                if (dist < 0.01f) { continue; }
+                Vector3 p1 = a + Vector3.up * (radius + 0.45f), p2 = a + Vector3.up * Mathf.Max(radius + 0.45f, height - radius);
+                var hits = Physics.CapsuleCastAll(p1, p2, radius, dir / dist, dist, ~0, QueryTriggerInteraction.Ignore);
+                foreach (var h in hits) {
+                    var t = h.collider.transform;
+                    if (t.IsChildOf(player.transform)) { continue; }
+                    string n = t.name + "|" + (t.parent != null ? t.parent.name : "");
+                    if (n.Contains("Tronco") || n.Contains("Galho") || n.Contains("galho") || n.Contains("NPC") || n.Contains("Modelo")) { continue; }
+                    if (h.collider.GetComponentInParent<Stompable>() != null) { continue; }
+                    if (h.collider is TerrainCollider) { continue; }                  // chão/rampa do terreno
+                    if (Vector3.Dot(h.normal, Vector3.up) > 0.6f) { continue; }        // piso
+                    blocks++;
+                    TSB.s_Log.AppendLine($"  BLOQUEIO no passo {k}: {t.name} ({(t.parent != null ? t.parent.name : "-")}) em {h.point}");
+                    break;
+                }
+            }
+            TSB.s_Log.AppendLine(blocks == 0 ? "Teste de percurso: OK, caminho livre do início ao chefe" : $"Teste de percurso: {blocks} bloqueio(s)");
+            return blocks;
+        }
+
+        private static Material BossMaterial(string name, Color color, Color emission)
+        {
+            string path = $"{MatDir}/{name}.mat";
+            var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (mat == null) { mat = new Material(Shader.Find("Standard")); AssetDatabase.CreateAsset(mat, path); }
+            mat.SetColor("_Color", color);
+            mat.SetFloat("_Glossiness", 0.55f);
+            if (emission.maxColorComponent > 0.001f) { mat.EnableKeyword("_EMISSION"); mat.SetColor("_EmissionColor", emission); }
+            EditorUtility.SetDirty(mat);
+            return mat;
         }
 
         private static float Random(int seed)

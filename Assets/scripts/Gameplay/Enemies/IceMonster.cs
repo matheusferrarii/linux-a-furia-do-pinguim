@@ -19,16 +19,16 @@ namespace LinuxFuriaPinguim
 
         [SerializeField] private Vector3 pointA;
         [SerializeField] private Vector3 pointB;
-        [SerializeField] private float speed = 2.5f;
-        [SerializeField] private float chaseSpeed = 3.6f;
-        [SerializeField] private float pauseAtEnds = 0.6f;
-        [SerializeField] private float aggroRadius = 9f;
-        [SerializeField] private float leashRadius = 13f;
-        [SerializeField] private float lungeRange = 4.5f;
-        [SerializeField] private float windupTime = 0.6f;
-        [SerializeField] private float lungeSpeed = 11f;
-        [SerializeField] private float lungeTime = 0.35f;
-        [SerializeField] private float dizzyTime = 1.4f;
+        [SerializeField] private float speed = 3.2f;
+        [SerializeField] private float chaseSpeed = 5.0f;
+        [SerializeField] private float pauseAtEnds = 0.3f;
+        [SerializeField] private float aggroRadius = 13f;
+        [SerializeField] private float leashRadius = 18f;
+        [SerializeField] private float lungeRange = 6.5f;
+        [SerializeField] private float windupTime = 0.42f;
+        [SerializeField] private float lungeSpeed = 15f;
+        [SerializeField] private float lungeTime = 0.4f;
+        [SerializeField] private float dizzyTime = 0.8f;
         [SerializeField] private int contactDamage = 1;
         [SerializeField] private float knockback = 7f;
         [SerializeField] private bool tutorial;
@@ -59,6 +59,14 @@ namespace LinuxFuriaPinguim
             aggroRadius *= Mathf.Sqrt(aggression); leashRadius *= Mathf.Sqrt(aggression);
             windupTime /= aggression; dizzyTime /= aggression;
             windupTime = Mathf.Max(0.35f, windupTime); // sempre dá para reagir
+        }
+
+        /// <summary>Muda o território (monstros invocados pelo chefe).</summary>
+        public void SetPatrol(Vector3 a, Vector3 b, float aggression)
+        {
+            pointA = a; pointB = b;
+            chaseSpeed *= aggression; windupTime = Mathf.Max(0.35f, windupTime / aggression);
+            aggroRadius = 30f; leashRadius = 30f;
         }
 
         private void Awake()

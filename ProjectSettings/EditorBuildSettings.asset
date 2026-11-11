@@ -12,6 +12,12 @@ EditorBuildSettings:
     path: Assets/Scenes/Mountain.unity
     guid: 28b8e054ff54c16468fbb1ec8a296b5b
   - enabled: 1
-    path: Assets/Scenes/Mountain_Fase2.unity
-    guid: a31991bd49f53824abdfb5fbd2dbf04b
+    path: Assets/Scenes/Fase2_ValeGlacial.unity
+    guid: 1bbee33efede112448f92d332ba65227
+  - enabled: 1
+    path: Assets/Scenes/Fase3_RuinasSoterradas.unity
+    guid: 3be3ca54f1843ea438c879252f3252e9
+  - enabled: 1
+    path: Assets/Scenes/Fase4_Pico.unity
+    guid: a7627bd71132ca94581c7af0a6503a2c
   m_configObjects: {}

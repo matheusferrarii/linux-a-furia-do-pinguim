@@ -42,6 +42,7 @@ namespace LinuxFuriaPinguim.EditorTools
             bank.enemyHit = Save("sfx_acerto", Hit());
             bank.enemyDie = Save("sfx_inimigo_derrotado", Pop());
             bank.monsterWindup = Save("sfx_monstro_aviso", Windup(), gain: 0.7f);
+            bank.blocked = Save("sfx_defendeu", Tink(), gain: 0.7f);
             bank.fish = Save("sfx_peixe", Coin());
             bank.rareFish = Save("sfx_peixe_dourado", RareCoin());
             bank.checkpoint = Save("sfx_checkpoint", CheckpointSfx());
@@ -99,6 +100,7 @@ namespace LinuxFuriaPinguim.EditorTools
         private static float[] Hit() { var b = Buf(0.18f); Tone(b, 0, 0.16f, 170, 60, Sine, 0.6f, 0.001f, 0.1f); Noise(b, 0, 0.08f, 0.35f, 0.001f, 0.06f, 0.6f); return b; }
         private static float[] Pop() { var b = Buf(0.3f); Tone(b, 0, 0.22f, 900, 180, Sine, 0.45f, 0.001f, 0.12f); Noise(b, 0, 0.12f, 0.3f, 0.001f, 0.1f, 0.7f); return b; }
         private static float[] Windup() { var b = Buf(0.45f); Tone(b, 0, 0.45f, 110, 220, Saw, 0.18f, 0.05f, 0.08f, vibrato: 40); return b; }
+        private static float[] Tink() { var b = Buf(0.35f); Bell(b, 0, Hz(98), 0.4f, 0.3f); Bell(b, 0.01f, Hz(103), 0.25f, 0.25f); Noise(b, 0, 0.04f, 0.3f, 0.001f, 0.03f, 0.95f); return b; }
         private static float[] Coin() { var b = Buf(0.32f); Bell(b, 0, Hz(83), 0.35f, 0.08f); Bell(b, 0.07f, Hz(88), 0.4f, 0.25f); return b; }
         private static float[] RareCoin() { var b = Buf(0.9f); int[] n = { 84, 88, 91, 96 }; for (int i = 0; i < n.Length; i++) { Bell(b, i * 0.08f, Hz(n[i]), 0.3f, 0.6f); } return b; }
         private static float[] CheckpointSfx() { var b = Buf(1.0f); int[] n = { 79, 83, 86, 91 }; for (int i = 0; i < n.Length; i++) { Bell(b, i * 0.06f, Hz(n[i]), 0.25f, 0.8f); } return b; }

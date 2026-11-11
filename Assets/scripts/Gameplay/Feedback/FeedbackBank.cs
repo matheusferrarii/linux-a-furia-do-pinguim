@@ -19,6 +19,7 @@ namespace LinuxFuriaPinguim
         public AudioClip enemyHit;
         public AudioClip enemyDie;
         public AudioClip monsterWindup;
+        public AudioClip blocked;
 
         [Header("Fase")]
         public AudioClip fish;

@@ -22,6 +22,7 @@ MonoBehaviour:
   enemyHit: {fileID: 8300000, guid: 6e518bd0aafbe8f44a3dbb1e01320e6b, type: 3}
   enemyDie: {fileID: 8300000, guid: c143c91b40a9e6d4e9a3fb32a1f0da37, type: 3}
   monsterWindup: {fileID: 8300000, guid: c095cd4fca7666a40aee14a50710a932, type: 3}
+  blocked: {fileID: 8300000, guid: 72ad0a1b86b0c09448c8b1869673169a, type: 3}
   fish: {fileID: 8300000, guid: 58318d3b11e5d9a4db48dd1dc7618e25, type: 3}
   rareFish: {fileID: 8300000, guid: e606ca641142f314ebc5ba1b213cd8c5, type: 3}
   checkpoint: {fileID: 8300000, guid: 2d765faca0ee2304fb90b665e4ab450f, type: 3}

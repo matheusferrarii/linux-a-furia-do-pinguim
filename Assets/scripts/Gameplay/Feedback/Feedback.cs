@@ -37,6 +37,9 @@ namespace LinuxFuriaPinguim
             if (strength > 0.5f) { Shake(0.08f * strength, 0.15f); }
         }
         public static void Slide(Vector3 pos) { var b = Bank; if (b == null) { return; } Play(b.slide); Fx(b.dustEffect, pos, 0.8f); }
+        public static void SlideSpray(Vector3 pos) { var b = Bank; if (b == null) { return; } Fx(b.dustEffect, pos, 0.45f); }
+        public static void Blocked(Vector3 pos) { var b = Bank; if (b == null) { return; } Play(b.blocked != null ? b.blocked : b.enemyHit); Fx(b.hitEffect, pos, 0.5f); }
+        public static void QteKey(bool ok) { var b = Bank; if (b == null) { return; } Play(ok ? b.dialogBlip : b.playerHurt); }
         public static void Throw() => Play(Bank != null ? Bank.throwBall : null);
         public static void Stomp(Vector3 pos)
         {

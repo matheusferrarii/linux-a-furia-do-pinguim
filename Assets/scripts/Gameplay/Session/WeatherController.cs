@@ -19,7 +19,7 @@ namespace LinuxFuriaPinguim
         private Color m_BaseFogColor;
 
         private const float LightRate = 60f, BlizzardRate = 900f;
-        private const float BlizzardDensity = 0.028f;
+        private const float BlizzardDensity = 0.016f;
         private static readonly Color BlizzardFog = new Color(0.82f, 0.88f, 0.94f);
 
         public void Init(Material snowMaterial)
