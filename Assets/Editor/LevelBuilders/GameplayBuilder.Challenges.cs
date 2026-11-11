@@ -223,7 +223,16 @@ namespace LinuxFuriaPinguim.EditorTools
         private static bool CreateBranch(Transform parent, int k, ExtraMats x)
         {
             var t = Across(parent, "Galho baixo (deslize)", k, out float width);
-            float clearance = P * 0.55f;   // em pé não passa (altura P); deslizando (0,4·P) passa
+            // O vão é medido a partir do PONTO MAIS ALTO do chão embaixo do galho (de borda a borda e um
+            // pouco antes/depois). Chão irregular demais (degrau/rampa) = não coloca galho aqui.
+            float baseY = t.position.y, maxY = float.MinValue, minY = float.MaxValue;
+            for (float u = -width * 0.5f + 1f; u <= width * 0.5f - 1f; u += 1f)
+            for (float v = -1.5f; v <= 1.5f; v += 1.5f) {
+                if (TSB.GroundAt(t.position + t.right * u + t.forward * v, out var g)) { maxY = Mathf.Max(maxY, g.y); minY = Mathf.Min(minY, g.y); }
+            }
+            if (maxY == float.MinValue || maxY - minY > 0.9f) { Object.DestroyImmediate(t.gameObject); return false; }
+            float lift = Mathf.Max(0f, maxY - baseY);
+            float clearance = P * 0.68f + lift;   // em pé (altura P) não passa; deslizando (0,4·P) passa com folga
             float d = P * 0.3f;
             var side = Quaternion.Euler(0f, 0f, 90f);
             Prim(PrimitiveType.Cylinder, t, new Vector3(0, clearance + d * 0.5f, 0), new Vector3(d, width * 0.5f, d), x.Wood, side);
@@ -562,6 +571,18 @@ namespace LinuxFuriaPinguim.EditorTools
                     if (Vector3.Dot(h.normal, Vector3.up) > 0.6f) { continue; }        // piso
                     blocks++;
                     TSB.s_Log.AppendLine($"  BLOQUEIO no passo {k}: {t.name} ({(t.parent != null ? t.parent.name : "-")}) em {h.point}");
+                    break;
+                }
+
+                // Deslizando (cápsula baixa, como o pinguim de barriga): galho tem que deixar passar
+                float slideH = Mathf.Max(height * 0.4f, radius * 2f);
+                Vector3 s1 = a + Vector3.up * (radius + 0.25f), s2 = a + Vector3.up * Mathf.Max(radius + 0.25f, slideH - radius + 0.25f);
+                foreach (var h in Physics.CapsuleCastAll(s1, s2, radius, dir / dist, dist, ~0, QueryTriggerInteraction.Ignore)) {
+                    var t = h.collider.transform;
+                    string n = t.name + "|" + (t.parent != null ? t.parent.name : "");
+                    if (!(n.Contains("Galho") || n.Contains("galho"))) { continue; }
+                    blocks++;
+                    TSB.s_Log.AppendLine($"  GALHO não passa deslizando no passo {k} em {h.point}");
                     break;
                 }
             }
