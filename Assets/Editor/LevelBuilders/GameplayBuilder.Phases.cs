@@ -140,7 +140,7 @@ namespace LinuxFuriaPinguim.EditorTools
             NpcOrder = new[] { "inicio", "fedora", "debi", "arch", "gentoo" },
             BossName = "BSOD FINAL", BossColor = new Color(0.45f, 0.62f, 0.95f), FaceOk = "■   ■", FaceSad = ":(", FaceSadText = "Seu reino encontrou um problema",
             BossScale = 1.3f, Slam = true, Throw = true, Charge = true, IceRain = true, Summon = true,
-            BossCores = 5, BossStagger = 6, QteLength = 6, QteTime = 3.2f, BossSpeed = 1.35f, GuardPeriod = 1.7f, GuardWindow = 0.55f, BossExtraShards = 2,
+            BossCores = 5, BossStagger = 6, QteLength = 6, QteTime = 3.52f, BossSpeed = 1.35f, GuardPeriod = 1.7f, GuardWindow = 0.55f, BossExtraShards = 2,
             Dialogues = DialoguesPhase4, Missions = (c, e, r) => PhaseMissions(c, e, r, "Suba até o Pico da Montanha Ancestral", "Desligue o BSOD de vez"),
         };
 

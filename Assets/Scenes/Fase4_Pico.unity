@@ -45538,7 +45538,7 @@ MonoBehaviour:
   guardPeriod: 1.7
   guardOpenTime: 0.55
   qteBaseLength: 6
-  qteTime: 3.2
+  qteTime: 3.52
 --- !u!4 &385383825
 Transform:
   m_ObjectHideFlags: 0
