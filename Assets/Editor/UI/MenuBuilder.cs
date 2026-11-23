@@ -464,6 +464,14 @@ namespace LinuxFuriaPinguim.EditorTools
             frameImage.pixelsPerUnitMultiplier = 0.25f;
         }
 
+        /// <summary>Créditos mostrados no popup Extras do menu principal.</summary>
+        private const string Credits =
+            "<color=#FFCD3C><b>CRÉDITOS</b></color>\n\n" +
+            "David Eduardo Lino\n" +
+            "Matheus Floresti Ferrari\n" +
+            "Maria Eduarda Ladeia\n" +
+            "Enzo Brumate";
+
         private static GameObject BuildExtrasPanel(Transform canvasParent)
         {
             GameObject panel = CreateFullStretchImage(canvasParent, "PopupExtras", new Color(0f, 0f, 0f, 0.55f)).gameObject;
@@ -477,14 +485,16 @@ namespace LinuxFuriaPinguim.EditorTools
             StyleTitle(title);
             PositionTop(title.rectTransform, -30f, 600f, 70f);
 
-            Text body = CreateLabel(card.transform, "ExtrasBody", "Creditos, galeria e conquistas\nem breve.", 22);
+            Text body = CreateLabel(card.transform, "ExtrasBody", Credits, 24);
             body.color = IceLight;
+            body.supportRichText = true;
+            body.lineSpacing = 1.1f;
             RectTransform bodyRect = body.rectTransform;
             bodyRect.anchorMin = new Vector2(0.5f, 0.5f);
             bodyRect.anchorMax = new Vector2(0.5f, 0.5f);
             bodyRect.pivot = new Vector2(0.5f, 0.5f);
-            bodyRect.anchoredPosition = new Vector2(0f, 10f);
-            bodyRect.sizeDelta = new Vector2(540f, 140f);
+            bodyRect.anchoredPosition = new Vector2(0f, 4f);
+            bodyRect.sizeDelta = new Vector2(540f, 230f);
 
             Button closeButton = CreateFrostedButton(card.transform, "CloseButton", "VOLTAR");
             PositionBottomCenter(closeButton.GetComponent<RectTransform>(), 24f, 240f, 50f);

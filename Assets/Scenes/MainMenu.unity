@@ -153,8 +153,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 10}
-  m_SizeDelta: {x: 540, y: 140}
+  m_AnchoredPosition: {x: 0, y: 4}
+  m_SizeDelta: {x: 540, y: 230}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &8799531
 MonoBehaviour:
@@ -178,7 +178,7 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 22
+    m_FontSize: 24
     m_FontStyle: 0
     m_BestFit: 0
     m_MinSize: 10
@@ -188,10 +188,8 @@ MonoBehaviour:
     m_RichText: 1
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
-    m_LineSpacing: 1
-  m_Text: 'Creditos, galeria e conquistas
-
-    em breve.'
+    m_LineSpacing: 1.1
+  m_Text: "<color=#FFCD3C><b>CR\u00C9DITOS</b></color>\n\nDavid Eduardo Lino\nMatheus Floresti Ferrari\nMaria Eduarda Ladeia\nEnzo Brumate"
 --- !u!222 &8799532
 CanvasRenderer:
   m_ObjectHideFlags: 0
