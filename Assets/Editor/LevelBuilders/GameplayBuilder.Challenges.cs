@@ -83,6 +83,8 @@ namespace LinuxFuriaPinguim.EditorTools
                 if (emission.maxColorComponent > 0f && mat.HasProperty("_EmissionColor")) {
                     mat.EnableKeyword("_EMISSION");
                     mat.SetColor("_EmissionColor", emission);
+                    // sem isso o Inspector do Standard acha que a emissão é preta e remove o _EMISSION
+                    mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
                 }
                 if (transparent && mat.shader == standard) {
                     // Standard em modo Fade
@@ -597,7 +599,10 @@ namespace LinuxFuriaPinguim.EditorTools
             if (mat == null) { mat = new Material(Shader.Find("Standard")); AssetDatabase.CreateAsset(mat, path); }
             mat.SetColor("_Color", color);
             mat.SetFloat("_Glossiness", 0.55f);
-            if (emission.maxColorComponent > 0.001f) { mat.EnableKeyword("_EMISSION"); mat.SetColor("_EmissionColor", emission); }
+            if (emission.maxColorComponent > 0.001f) {
+                mat.EnableKeyword("_EMISSION"); mat.SetColor("_EmissionColor", emission);
+                mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+            }
             EditorUtility.SetDirty(mat);
             return mat;
         }
