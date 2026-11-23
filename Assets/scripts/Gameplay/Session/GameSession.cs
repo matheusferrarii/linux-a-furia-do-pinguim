@@ -39,6 +39,7 @@ namespace LinuxFuriaPinguim
 
         [Header("Visual do HUD")]
         [SerializeField] private Font titleFont;
+        [SerializeField] private Font bodyFont;
         [SerializeField] private Sprite panelSprite;
         [SerializeField] private Sprite buttonSprite;
 
@@ -67,11 +68,11 @@ namespace LinuxFuriaPinguim
 
 #if UNITY_EDITOR
         /// <summary>Usado pelo gerador da fase (Tools > Furia Pinguim > Fase).</summary>
-        public void EditorSetup(PenguinCharacter p, int lives, float killY, List<Mission> list, Font font, Sprite panel, Sprite button, Material snow, FeedbackBank bank, string next, string areaName = null, bool areaBlizzard = false)
+        public void EditorSetup(PenguinCharacter p, int lives, float killY, List<Mission> list, Font font, Sprite panel, Sprite button, Material snow, FeedbackBank bank, string next, string areaName = null, bool areaBlizzard = false, Font body = null)
         {
             player = p; startLives = lives; fallKillY = killY; missions = list;
             if (areaName != null) { startArea = areaName; startBlizzard = areaBlizzard; }
-            titleFont = font; panelSprite = panel; buttonSprite = button; snowMaterial = snow; feedbackBank = bank; nextScene = next;
+            titleFont = font; bodyFont = body; panelSprite = panel; buttonSprite = button; snowMaterial = snow; feedbackBank = bank; nextScene = next;
         }
 #endif
 
@@ -84,7 +85,7 @@ namespace LinuxFuriaPinguim
             if (player == null) { player = FindAnyObjectByType<PenguinCharacter>(); }
 
             Hud = gameObject.AddComponent<GameHUD>();
-            Hud.Init(this, titleFont, panelSprite, buttonSprite);
+            Hud.Init(this, titleFont, bodyFont, panelSprite, buttonSprite);
             Weather = gameObject.AddComponent<WeatherController>();
             Weather.Init(snowMaterial);
         }

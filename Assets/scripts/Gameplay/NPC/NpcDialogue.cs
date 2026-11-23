@@ -33,6 +33,7 @@ namespace LinuxFuriaPinguim
         private bool m_Talking;
         private PenguinCharacter m_Player;
         private Quaternion m_BaseRotation;
+        private NpcAnimator m_Anim;
 
         public string DisplayName => displayName;
 
@@ -47,7 +48,11 @@ namespace LinuxFuriaPinguim
             var col = GetComponent<SphereCollider>();
             col.isTrigger = true;
             col.radius = talkRadius / Mathf.Max(0.01f, transform.lossyScale.x);
-            if (model != null) { m_BaseRotation = model.rotation; }
+            if (model != null) {
+                m_BaseRotation = model.rotation;
+                m_Anim = model.GetComponent<NpcAnimator>();
+                if (m_Anim == null) { m_Anim = model.gameObject.AddComponent<NpcAnimator>(); }
+            }
         }
 
         private void Update()
@@ -70,6 +75,7 @@ namespace LinuxFuriaPinguim
             m_Talking = true;
             hud.HidePrompt(this);
             m_Player.InputLocked = true;
+            if (m_Anim != null) { m_Anim.Wave(); }
             var lines = (!m_Talked || repeatTalk.Length == 0) ? firstTalk : repeatTalk;
             bool finished = false;
             hud.ShowDialog(lines, displayName, () => finished = true);
@@ -93,6 +99,7 @@ namespace LinuxFuriaPinguim
             if (penguin == null) { return; }
             m_Player = penguin;
             m_PlayerInRange = true;
+            if (m_Anim != null) { m_Anim.Wave(8f); } // acena quando o jogador chega perto
             GameSession.Instance?.Hud?.ShowPrompt(this, "[E] Conversar com " + displayName);
         }
 

@@ -38,7 +38,8 @@ namespace LinuxFuriaPinguim.EditorTools
         private const string PlayerSnowball = Demo + "Environment/Projectiles/Player SnowBall.prefab";
         private const string EnemyPuff = Demo + "Effects/Puff Effect Enemy.prefab";
         private const string IceCircle = "Assets/GeeZyyGames/Winter/prefab/ice circle.prefab";
-        private const string TitleFont = "Assets/UI/Fonts/SantasAirMail.ttf";
+        private const string TitleFont = "Assets/UI/Fonts/Bangers.ttf";
+        private const string BodyFont = "Assets/UI/Fonts/Roboto-Bold.ttf";
         private const string PanelSprite = "Assets/UI/Sprites/Buttons/Panel_Large_Icy.png";
         private const string ButtonSprite = "Assets/UI/Sprites/Buttons/Panel_Blank_1.png";
 
@@ -152,11 +153,17 @@ namespace LinuxFuriaPinguim.EditorTools
             // --- NPCs
             var dialogues = Ph.Dialogues();
             int side = 1;
+            bool firstNpc = true;
             foreach (var (id, k) in npcSpots) {
                 var d = dialogues[id];
-                CreateNpc(npcRoot, id, d.name, k, side, d.first, d.repeat, d.missions, d.scale);
+                // O primeiro (Ancião Tux / quem abre a fase) fica à frente do jogador no nascimento, de frente para ele.
+                Vector3? at = firstNpc ? InFrontOfPlayer(player.transform, side) : null;
+                if (firstNpc) { log.AppendLine(at.HasValue ? $"NPC inicial à frente do jogador em {at.Value}" : "NPC inicial: sem espaço à frente, usando o caminho."); }
+                CreateNpc(npcRoot, id, d.name, k, side, d.first, d.repeat, d.missions, d.scale, at, firstNpc ? player.transform.position : (Vector3?)null);
                 side = -side;
+                firstNpc = false;
             }
+            s_ExtraShots.Add(("inicio_visao_do_jogador", player.transform.position, player.transform.eulerAngles.y));
 
             // --- inimigos
             var shooterK = Ph.Shooters.Select(K).ToArray();
@@ -314,6 +321,55 @@ namespace LinuxFuriaPinguim.EditorTools
             return TSB.GroundAt(p, out var g) ? g : p;
         }
 
+        /// <summary>
+        /// Ponto andável à frente do jogador (≈6–9 m, levemente de lado para não bloquear a passagem),
+        /// longe das bordas. Null se não houver espaço.
+        /// </summary>
+        private static Vector3? InFrontOfPlayer(Transform player, int side)
+        {
+            Vector3 fwd = player.forward; fwd.y = 0;
+            if (fwd.sqrMagnitude < 0.01f) { fwd = Vector3.forward; }
+            fwd.Normalize();
+            Vector3 toPath = Point(16) - player.position; toPath.y = 0;
+            // o jogador pode nascer um pouco no ar (fase 1): compara com o chão embaixo dele
+            float baseY = TSB.GroundAt(player.position, out var under) ? under.y : player.position.y;
+            var dirs = new List<Vector3> { fwd };
+            if (toPath.sqrMagnitude > 1f) { dirs.Add(Vector3.Slerp(fwd, toPath.normalized, 0.5f).normalized); dirs.Add(toPath.normalized); }
+            foreach (float room in new[] { 1.6f, 1.0f }) {
+                foreach (var d in dirs) {
+                    if (Vector3.Dot(d, fwd) < 0.2f) { continue; } // tem que estar na frente da câmera inicial
+                    Vector3 right = Vector3.Cross(Vector3.up, d);
+                    foreach (float dist in new[] { 7f, 6f, 8f, 9f, 5f, 10f, 11f, 4.5f }) {
+                        foreach (float lat in new[] { 2.2f * side, 1.2f * side, 0f, -1.2f * side, -2.2f * side }) {
+                            Vector3 p = player.position + d * dist + right * lat;
+                            if (!Roomy(p, room)) { continue; }
+                            if (!TSB.GroundAt(p, out var g)) { continue; }
+                            if (Mathf.Abs(g.y - baseY) > 2.5f) { continue; } // nada de NPC em cima de pedra/barranco
+                            return g;
+                        }
+                    }
+                }
+            }
+            var log = TSB.s_Log;
+            log.AppendLine($"  jogador {player.position} frente {fwd} caminho {toPath.normalized}; andável: " +
+                string.Join(" ", new[] { 2f, 4f, 6f, 8f, 10f }.Select(s => {
+                    Vector3 p = player.position + fwd * s;
+                    string h = TSB.GroundAt(p, out var g) ? (g.y - baseY).ToString("F1") : "sem chão";
+                    return $"{s}m=walk{(TSB.IsWalk(p) ? 1 : 0)}/room{(Roomy(p, 1f) ? 1 : 0)}/dy {h}";
+                })));
+            return null;
+        }
+
+        private static bool Roomy(Vector3 p, float r)
+        {
+            if (!TSB.IsWalk(p)) { return false; }
+            for (int a = 0; a < 8; a++) {
+                float ang = a * Mathf.PI / 4f;
+                if (!TSB.IsWalk(p + new Vector3(Mathf.Cos(ang), 0, Mathf.Sin(ang)) * r)) { return false; }
+            }
+            return true;
+        }
+
         private static int HiddenCorner(int fromK, int toK)
         {
             int best = -1, bestScore = -1;
@@ -427,9 +483,9 @@ namespace LinuxFuriaPinguim.EditorTools
         }
 
         private static void CreateNpc(Transform parent, string id, string name, int k, int side, DialogueLine[] first, DialogueLine[] repeat,
-            string[] missions, float scale)
+            string[] missions, float scale, Vector3? at = null, Vector3? lookAt = null)
         {
-            Vector3 pos = SideOf(k, side, 4f, 2.2f);
+            Vector3 pos = at ?? SideOf(k, side, 4f, 2.2f);
             var go = new GameObject("NPC " + name);
             go.transform.SetParent(parent, false);
             go.transform.position = pos;
@@ -437,7 +493,7 @@ namespace LinuxFuriaPinguim.EditorTools
 
             var modelRoot = new GameObject("Modelo").transform;
             modelRoot.SetParent(go.transform, false);
-            Vector3 face = Point(k) - pos; face.y = 0;
+            Vector3 face = (lookAt ?? Point(k)) - pos; face.y = 0;
             modelRoot.rotation = Quaternion.LookRotation(face.sqrMagnitude > 0.01f ? face.normalized : -Perp(k) * side);
             var model = Model(PenguinModel, modelRoot, s_ModelHeight * scale, out _);
             if (model != null) {
@@ -452,6 +508,7 @@ namespace LinuxFuriaPinguim.EditorTools
                     }
                 }
             }
+            modelRoot.gameObject.AddComponent<NpcAnimator>(); // idle no chão + aceno (sem isso fica na pose de queda)
             var body = modelRoot.gameObject.AddComponent<CapsuleCollider>();
             body.center = Vector3.up * (s_ModelHeight * scale * 0.5f);
             body.height = s_ModelHeight * scale;
@@ -608,7 +665,8 @@ namespace LinuxFuriaPinguim.EditorTools
             session.EditorSetup(player, 3, minY - 30f, missions,
                 AssetDatabase.LoadAssetAtPath<Font>(TitleFont),
                 AssetDatabase.LoadAssetAtPath<Sprite>(PanelSprite),
-                AssetDatabase.LoadAssetAtPath<Sprite>(ButtonSprite), snow, LoadOrBuildBank(), Ph.NextScene, Ph.Areas[0].name, Ph.Areas[0].blizzard);
+                AssetDatabase.LoadAssetAtPath<Sprite>(ButtonSprite), snow, LoadOrBuildBank(), Ph.NextScene, Ph.Areas[0].name, Ph.Areas[0].blizzard,
+                AssetDatabase.LoadAssetAtPath<Font>(BodyFont));
             EditorUtility.SetDirty(session);
         }
 
@@ -834,7 +892,7 @@ namespace LinuxFuriaPinguim.EditorTools
                 var session = Object.FindAnyObjectByType<GameSession>();
                 var hud = hudGo.AddComponent<GameHUD>();
                 var so = new SerializedObject(session);
-                hud.Init(session, (Font)so.FindProperty("titleFont").objectReferenceValue,
+                hud.Init(session, (Font)so.FindProperty("titleFont").objectReferenceValue, (Font)so.FindProperty("bodyFont").objectReferenceValue,
                     (Sprite)so.FindProperty("panelSprite").objectReferenceValue, (Sprite)so.FindProperty("buttonSprite").objectReferenceValue);
                 Vector3 sp = cam.WorldToScreenPoint(monster.GetComponent<Collider>().bounds.center);
                 hud.EditorPreview(cam, "Batedora Debi", "Quando um inimigo aparece na sua frente, ele ganha uma mira amarela: é nele que a bola vai. Segure o botão direito para travar a câmera nele.",
